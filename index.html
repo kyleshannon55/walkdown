@@ -1,0 +1,1149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Walkdown">
+<meta name="theme-color" content="#1B2A41">
+<title>Walkdown — Facility Audit</title>
+<style>
+  html,body{margin:0;padding:0;background:#EDEFF2;-webkit-text-size-adjust:100%}
+  #root{min-height:100vh}
+  .boot{font-family:-apple-system,system-ui,sans-serif;color:#586070;padding:24px;font-size:14px}
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js" crossorigin></script>
+</head>
+<body>
+<div id="root"><div class="boot">Loading Walkdown…</div></div>
+<noscript>Walkdown needs JavaScript enabled.</noscript>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+const Ico = ({ size = 24, color = "currentColor", style, children }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style}>{children}</svg>
+);
+const Plus = (p) => <Ico {...p}><path d="M5 12h14"/><path d="M12 5v14"/></Ico>;
+const ChevronLeft = (p) => <Ico {...p}><path d="m15 18-6-6 6-6"/></Ico>;
+const ChevronRight = (p) => <Ico {...p}><path d="m9 18 6-6-6-6"/></Ico>;
+const Camera = (p) => <Ico {...p}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></Ico>;
+const ImagePlus = (p) => <Ico {...p}><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><line x1="16" y1="5" x2="22" y2="5"/><line x1="19" y1="2" x2="19" y2="8"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></Ico>;
+const MapPin = (p) => <Ico {...p}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></Ico>;
+const Trash2 = (p) => <Ico {...p}><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></Ico>;
+const FileText = (p) => <Ico {...p}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></Ico>;
+const Building2 = (p) => <Ico {...p}><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></Ico>;
+const Calendar = (p) => <Ico {...p}><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></Ico>;
+const User = (p) => <Ico {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Ico>;
+const ClipboardList = (p) => <Ico {...p}><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></Ico>;
+const X = (p) => <Ico {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Ico>;
+const Check = (p) => <Ico {...p}><path d="M20 6 9 17l-5-5"/></Ico>;
+const Pencil = (p) => <Ico {...p}><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></Ico>;
+
+/* ============================== design tokens ============================== */
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+:root{
+  --bg:#EDEFF2; --surface:#FFFFFF; --ink:#13161B; --ink-soft:#586070;
+  --line:#DCE0E6; --navy:#1B2A41; --accent:#0FA0A0; --accent-ink:#0A6E6E;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+.wd{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
+.wd-h{font-family:'Space Grotesk',system-ui,sans-serif}
+.mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,textarea{font-family:inherit}
+.tag{display:inline-flex;align-items:center;gap:6px;border-radius:5px;line-height:1;position:relative}
+.tag-hole{display:block;width:7px;height:7px;border-radius:50%;background:#fff;border:1px solid rgba(0,0,0,.14);flex:none}
+.tag-lg .tag-hole{width:9px;height:9px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.press{transition:transform .08s ease}
+.press:active{transform:scale(.985)}
+input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@keyframes slideUp{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+.view{animation:slideUp .18s ease}
+@media (prefers-reduced-motion:reduce){.view{animation:none}.press{transition:none}}
+@media print{
+  body{background:#fff}
+  body *{visibility:hidden}
+  .print-area,.print-area *{visibility:visible}
+  .print-area{position:absolute;left:0;top:0;width:100%;padding:0}
+  .no-print{display:none!important}
+}
+`;
+
+/* ============================== reference data ============================== */
+const SEV = {
+  critical: { label: "Critical", color: "#C81E3A", fg: "#fff" },
+  major:    { label: "Major",    color: "#E0640F", fg: "#fff" },
+  minor:    { label: "Minor",    color: "#E8A200", fg: "#1b1300" },
+};
+const SEV_ORDER = ["critical", "major", "minor"];
+
+const STATUS = {
+  C:   { code: "C",   word: "Conforming",       color: "#2C9D5D" },
+  OFI: { code: "OFI", word: "Opportunity",      color: "#3457A6" },
+  NC:  { code: "NC",  word: "Nonconforming",    color: "#C81E3A" },
+  NA:  { code: "N/A", word: "Not applicable",   color: "#5B626D" },
+};
+const STATUS_ORDER = ["C", "OFI", "NC", "NA"];
+const isFinding = (it) => it.status === "NC" || it.status === "OFI";
+
+/* Management-system sections (ISO 19011 / ISO 9001) prepended to every template */
+const COMMON_SECTIONS = [
+  ["Management Responsibility", [
+    ["Quality policy and measurable objectives established and communicated", "ISO 9001 §5.2"],
+    ["Management review conducted on schedule with actions tracked", "ISO 9001 §9.3"],
+    ["Roles, responsibilities, and QA independence defined", "ISO 9001 §5.3"],
+    ["Personnel competence verified for assigned tasks (training effectiveness)", "ISO 9001 §7.2"],
+    ["Adequate resources and infrastructure provided", "ISO 9001 §7.1"],
+  ]],
+  ["Document & Record Control", [
+    ["Documents approved before use; current version available at point of use", "ISO 9001 §7.5.2"],
+    ["Obsolete documents removed or marked to prevent unintended use", "ISO 9001 §7.5.3"],
+    ["Records legible, retrievable, and retained per schedule", "ISO 9001 §7.5.3"],
+    ["Record and data integrity controlled (versioning, access, audit trail)", "Data integrity"],
+  ]],
+  ["Risk, Nonconformance & Improvement", [
+    ["Risk-based thinking applied; risks and controls documented (e.g., FMEA)", "ISO 9001 §6.1"],
+    ["Internal audit program established and self-audits performed", "ISO 9001 §9.2"],
+    ["Process performance metrics trended and acted upon", "ISO 9001 §9.1"],
+    ["CAPA effectiveness verified and recurrence checked before closure", "ISO 9001 §10.2"],
+    ["Nonconforming output identified, segregated, and dispositioned by authority", "ISO 9001 §8.7"],
+  ]],
+];
+
+const TEMPLATES = {
+  otc: {
+    label: "TPM Quality — OTC & Cosmetic",
+    framework: "21 CFR 210/211 · 700 · MoCRA",
+    sections: [
+      ["Personnel & Training", [
+        ["Operator training records current and role-specific", "211.25"],
+        ["Gowning and hygiene practices defined and followed", "211.28"],
+      ]],
+      ["Facilities & Equipment", [
+        ["Equipment cleaning and use logs maintained", "211.67"],
+        ["Equipment qualified (IQ/OQ/PQ) with records on file", "211.63"],
+        ["Calibration program for critical instruments", "211.68"],
+        ["Calibration standards NIST-traceable; out-of-tolerance impact assessed", "211.68"],
+        ["Pest control program documented and effective", "211.56"],
+      ]],
+      ["Materials & Components", [
+        ["Incoming components tested or CoA verified before use", "211.84"],
+        ["Supplier qualification program in place", "211.84(d)"],
+        ["Quarantine and release status controls enforced", "211.42"],
+        ["Lot traceability maintained end to end", "211.184"],
+      ]],
+      ["Production & Process Controls", [
+        ["In-process controls defined (fill weight, pH, viscosity)", "211.110"],
+        ["Line clearance performed and documented", "211.130"],
+        ["Batch record reviewed before release", "211.192"],
+        ["Rework / reprocessing authorized and controlled", "211.115"],
+      ]],
+      ["Laboratory Controls", [
+        ["Stability program established and ongoing", "211.166"],
+        ["OOS investigation procedure defined", "211.192"],
+        ["Reference standards controlled and current", "211.194"],
+      ]],
+      ["Packaging & Labeling", [
+        ["Label issuance and reconciliation controlled", "211.125"],
+        ["Expiration / lot coding verified on line", "211.130(c)"],
+        ["MoCRA labeling elements present, incl. AE contact", "MoCRA §605"],
+      ]],
+      ["Release & Complaints", [
+        ["Finished-product release criteria defined and met", "211.165"],
+        ["Consumer complaint and serious AE reporting process", "MoCRA §605"],
+        ["Recall procedure documented and tested", "211.150"],
+      ]],
+    ],
+  },
+  supp: {
+    label: "Dietary Supplement",
+    framework: "21 CFR Part 111",
+    sections: [
+      ["Personnel & Sanitation", [
+        ["Personnel qualified and trained for assigned tasks", "111.12"],
+        ["Hygiene and gowning controls in place", "111.14"],
+        ["Sanitation program documented and verified", "111.15"],
+      ]],
+      ["Components & Specifications", [
+        ["Identity testing on each incoming dietary ingredient", "111.75(a)"],
+        ["Specifications established for components and labels", "111.70"],
+        ["CoA reliability verified before reliance", "111.75(a)(2)"],
+      ]],
+      ["Production & Process Control", [
+        ["Master manufacturing record per product and batch size", "111.205"],
+        ["Batch production record completed for each batch", "111.255"],
+        ["In-process specs established and verified", "111.110"],
+      ]],
+      ["Holding & Distribution", [
+        ["Components and products held under proper conditions", "111.455"],
+        ["Lot / batch traceability through distribution", "111.475"],
+      ]],
+      ["Complaints", [
+        ["Product complaint handling and review process", "111.560"],
+        ["Serious adverse event reporting process", "DSHEA"],
+      ]],
+    ],
+  },
+  logi: {
+    label: "3PL / Logistics",
+    framework: "Storage · Distribution · Holds",
+    sections: [
+      ["Facility & Security", [
+        ["Access control restricts unauthorized entry", ""],
+        ["Temperature / humidity monitored and recorded in storage", "211.142"],
+        ["Damaged / returned / hold product physically segregated", "211.142"],
+      ]],
+      ["Inventory & Handling", [
+        ["FIFO / FEFO rotation enforced and verified", ""],
+        ["Lot and expiration traceability in WMS", ""],
+        ["Receiving inspection procedure followed", ""],
+      ]],
+      ["Quality Holds & Returns", [
+        ["FDA / CBP hold handling procedure in place", "SOP-QA-FDAHOLD-001"],
+        ["Returns and destruction documented with disposition", "SOP-QA-RET-001"],
+        ["Quarantine area access-controlled and labeled", ""],
+      ]],
+      ["Distribution", [
+        ["Pick / pack accuracy controls and verification", "211.150"],
+        ["Carrier qualification and temperature compliance", ""],
+      ]],
+      ["Documentation", [
+        ["Logistics quality agreement current and signed", "FRM02-005C"],
+        ["SOPs current and training records maintained", ""],
+      ]],
+    ],
+  },
+};
+
+/* ============================== helpers ============================== */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const hasStore = (() => { try { localStorage.setItem("__wd","1"); localStorage.removeItem("__wd"); return true; } catch { return false; } })();
+
+const store = {
+  async get(k){ try { const v = localStorage.getItem(k); return v == null ? null : v; } catch { return null; } },
+  async set(k,v){ try { localStorage.setItem(k, v); return true; } catch { return false; } },
+  async del(k){ try { localStorage.removeItem(k); } catch {} },
+};
+
+const blankProfile = () => ({
+  yearOpened: "", employees: "", shifts: "", size: "", products: "",
+  certifications: "", fdaReg: "", lastAudit: "", contact: "", notes: "",
+});
+
+function buildAudit(facility, location, key, auditor, date) {
+  const t = TEMPLATES[key];
+  const all = [...COMMON_SECTIONS, ...t.sections];
+  return {
+    id: uid(), facility, location, type: key, typeLabel: t.label, framework: t.framework,
+    auditor, date, createdAt: Date.now(), profile: blankProfile(), sops: [],
+    sections: all.map(([name, items]) => ({
+      id: uid(), name,
+      items: items.map(([requirement, ref]) => ({
+        id: uid(), requirement, ref, status: "pending", severity: null,
+        note: "", evidence: "", closure: "open", closureNote: "", closedDate: "", photos: [],
+      })),
+    })),
+  };
+}
+
+const itemsFlat = (a) => a.sections.flatMap(s => s.items);
+const assessedCount = (a) => itemsFlat(a).filter(i => i.status !== "pending").length;
+const findingsList = (a) => itemsFlat(a).filter(isFinding);
+const ncList = (a) => itemsFlat(a).filter(i => i.status === "NC");
+const ofiList = (a) => itemsFlat(a).filter(i => i.status === "OFI");
+const secAssessed = (s) => s.items.filter(i => i.status !== "pending").length;
+const fmtDate = (iso) => { try { return new Date(iso + "T00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); } catch { return iso; } };
+const fmtTime = (ts) => new Date(ts).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+function downscale(file, maxDim = 1000, quality = 0.55) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+function getCoords() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve(null);
+    navigator.geolocation.getCurrentPosition(
+      p => resolve({ lat: +p.coords.latitude.toFixed(4), lng: +p.coords.longitude.toFixed(4) }),
+      () => resolve(null), { timeout: 4000, maximumAge: 60000 }
+    );
+  });
+}
+function preview(it) {
+  const bits = [];
+  if (it.note) bits.push(it.note);
+  else if (it.evidence) bits.push("Ev: " + it.evidence);
+  if (it.photos.length) bits.push(it.photos.length + " photo" + (it.photos.length > 1 ? "s" : ""));
+  if (isFinding(it)) bits.push(it.closure === "closed" ? "Closed" : "Open");
+  return bits.length ? bits.join(" · ") : "Add evidence or notes";
+}
+
+/* ============================== shared UI ============================== */
+function PunchTag({ label, color, fg, size = "sm", count }) {
+  const lg = size === "lg";
+  return (
+    <span className={"tag wd-h" + (lg ? " tag-lg" : "")}
+      style={{ background: color, color: fg, padding: lg ? "7px 12px 7px 9px" : "3px 9px 3px 7px",
+        fontSize: lg ? 13 : 11, fontWeight: 600, letterSpacing: .2 }}>
+      <span className="tag-hole" />
+      <span>{label}{count != null && <span style={{ marginLeft: 6, fontWeight: 700 }}>{count}</span>}</span>
+    </span>
+  );
+}
+const SeverityTag = ({ sev, size, count }) => {
+  const s = SEV[sev]; return s ? <PunchTag label={s.label} color={s.color} fg={s.fg} size={size} count={count} /> : null;
+};
+const OfiTag = ({ size, count }) => <PunchTag label="OFI" color={STATUS.OFI.color} fg="#fff" size={size} count={count} />;
+
+function Bar({ value }) {
+  return (
+    <div style={{ height: 4, background: "var(--line)", borderRadius: 99, overflow: "hidden" }}>
+      <div style={{ height: "100%", width: `${Math.round(value * 100)}%`, background: "var(--accent)", borderRadius: 99, transition: "width .25s ease" }} />
+    </div>
+  );
+}
+
+function TopBar({ title, subtitle, onBack, right }) {
+  return (
+    <div className="no-print" style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
+      <div className="flex items-center" style={{ padding: "12px 12px", gap: 8, minHeight: 56 }}>
+        {onBack && (
+          <button onClick={onBack} className="press" aria-label="Back" style={{ color: "var(--accent-ink)", padding: 6, marginLeft: -4 }}>
+            <ChevronLeft size={24} />
+          </button>
+        )}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="wd-h" style={{ fontWeight: 600, fontSize: 17, lineHeight: 1.15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</div>
+          {subtitle && <div style={{ fontSize: 12, color: "var(--ink-soft)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subtitle}</div>}
+        </div>
+        {right}
+      </div>
+    </div>
+  );
+}
+
+const Label = ({ children }) => (
+  <label className="wd-h" style={{ fontSize: 11, fontWeight: 600, color: "var(--ink-soft)", display: "block", marginBottom: 6 }}>{children}</label>
+);
+
+function TextRow({ label, value, onChange, placeholder, multiline }) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <Label>{label}</Label>
+      {multiline
+        ? <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} rows={3}
+            className="card" style={{ width: "100%", padding: "11px 13px", fontSize: 15, lineHeight: 1.5, resize: "vertical", outline: "none" }} />
+        : <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+            className="card" style={{ width: "100%", padding: "11px 13px", fontSize: 15, outline: "none" }} />}
+    </div>
+  );
+}
+
+function StampGroup({ status, onSet }) {
+  return (
+    <div className="flex" style={{ gap: 6 }}>
+      {STATUS_ORDER.map(code => {
+        const st = STATUS[code], active = status === code;
+        return (
+          <button key={code} onClick={() => onSet(code)} aria-label={st.word} className="press mono"
+            style={{ flex: 1, minHeight: 40, borderRadius: 9, fontSize: 13, fontWeight: 600, letterSpacing: .4,
+              border: active ? "none" : "1.5px solid var(--line)",
+              background: active ? st.color : "var(--surface)",
+              color: active ? "#fff" : "var(--ink-soft)" }}>
+            {st.code}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ============================== app ============================== */
+function App() {
+  const [view, setView] = useState("home");
+  const [audits, setAudits] = useState([]);
+  const [curAudit, setCurAudit] = useState(null);
+  const [curSection, setCurSection] = useState(null);
+  const [curItem, setCurItem] = useState(null);
+  const [photoCache, setPhotoCache] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [warn, setWarn] = useState(null);
+  const camRef = useRef(null);
+  const libRef = useRef(null);
+
+  useEffect(() => { (async () => {
+    if (hasStore) { const raw = await store.get("audits:v1"); if (raw) { try { setAudits(JSON.parse(raw)); } catch {} } }
+    setLoading(false);
+  })(); }, []);
+
+  useEffect(() => {
+    if (!hasStore || (view !== "item" && view !== "report")) return;
+    const a = audits.find(x => x.id === curAudit); if (!a) return;
+    const ids = [];
+    itemsFlat(a).forEach(it => it.photos.forEach(p => { if (!(p.id in photoCache)) ids.push(p.id); }));
+    if (!ids.length) return;
+    (async () => {
+      const up = {};
+      for (const id of ids) { const d = await store.get("photo:" + id); if (d) up[id] = d; }
+      if (Object.keys(up).length) setPhotoCache(c => ({ ...c, ...up }));
+    })();
+  }, [view, curAudit, audits]); // eslint-disable-line
+
+  const commit = (updater) => setAudits(prev => {
+    const next = typeof updater === "function" ? updater(prev) : updater;
+    if (hasStore) store.set("audits:v1", JSON.stringify(next));
+    return next;
+  });
+  const mutateAudit = (aId, fn) => commit(prev => prev.map(a => a.id !== aId ? a : fn(a)));
+  const mutateItem = (aId, sId, iId, fn) => commit(prev => prev.map(a =>
+    a.id !== aId ? a : { ...a, sections: a.sections.map(s =>
+      s.id !== sId ? s : { ...s, items: s.items.map(it => it.id !== iId ? it : fn(it)) }) }));
+
+  const audit = audits.find(a => a.id === curAudit) || null;
+  const section = audit ? audit.sections.find(s => s.id === curSection) : null;
+  const item = section ? section.items.find(i => i.id === curItem) : null;
+
+  const openDetail = (aId, sId, iId) => { setCurAudit(aId); setCurSection(sId); setCurItem(iId); setView("item"); };
+
+  function setStatus(aId, sId, iId, code) {
+    if (code === "NC") {
+      mutateItem(aId, sId, iId, it => ({ ...it, status: "NC", severity: it.severity || "major" }));
+      openDetail(aId, sId, iId);
+    } else if (code === "OFI") {
+      mutateItem(aId, sId, iId, it => ({ ...it, status: "OFI" }));
+      openDetail(aId, sId, iId);
+    } else {
+      mutateItem(aId, sId, iId, it => ({ ...it, status: code }));
+    }
+  }
+  function setStatusHere(code) {
+    if (code === "NC") mutateItem(audit.id, section.id, item.id, it => ({ ...it, status: "NC", severity: it.severity || "major" }));
+    else mutateItem(audit.id, section.id, item.id, it => ({ ...it, status: code }));
+  }
+  async function addPhoto(file) {
+    if (!file) return;
+    try {
+      const data = await downscale(file);
+      const id = uid();
+      const coords = await getCoords();
+      setPhotoCache(c => ({ ...c, [id]: data }));
+      const ok = hasStore ? await store.set("photo:" + id, data) : true;
+      mutateItem(audit.id, section.id, item.id, it => ({ ...it, photos: [...it.photos, { id, ts: Date.now(), coords }] }));
+      if (!ok) setWarn("Photo kept for this session but couldn’t be saved locally (size limit).");
+    } catch { setWarn("Couldn’t read that image. Try another."); }
+  }
+  function removePhoto(pid) {
+    if (hasStore) store.del("photo:" + pid);
+    mutateItem(audit.id, section.id, item.id, it => ({ ...it, photos: it.photos.filter(p => p.id !== pid) }));
+  }
+  function deleteAudit(id) {
+    if (!window.confirm("Delete this audit and its findings? This can’t be undone.")) return;
+    commit(prev => prev.filter(a => a.id !== id));
+    setView("home"); setCurAudit(null);
+  }
+
+  if (loading) return <div className="wd"><div style={{ padding: 24, color: "var(--ink-soft)" }}>Loading…</div></div>;
+
+  return (
+    <div className="wd">
+      <style>{CSS}</style>
+      <input ref={camRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }}
+        onChange={e => { addPhoto(e.target.files?.[0]); e.target.value = ""; }} />
+      <input ref={libRef} type="file" accept="image/*" style={{ display: "none" }}
+        onChange={e => { addPhoto(e.target.files?.[0]); e.target.value = ""; }} />
+
+      {warn && (
+        <div className="no-print" onClick={() => setWarn(null)}
+          style={{ position: "fixed", bottom: 16, left: 12, right: 12, zIndex: 50, background: "var(--navy)", color: "#fff",
+            padding: "12px 14px", borderRadius: 12, fontSize: 13, boxShadow: "0 6px 20px rgba(0,0,0,.25)" }}>
+          {warn} <span style={{ opacity: .7, marginLeft: 8 }}>Tap to dismiss</span>
+        </div>
+      )}
+
+      {view === "home" && <Home audits={audits} onNew={() => setView("new")}
+        onOpen={a => { setCurAudit(a.id); setView("audit"); }}
+        onReset={() => { if (window.confirm("Clear all audits stored on this device?")) commit([]); }} />}
+
+      {view === "new" && <NewAudit onBack={() => setView("home")}
+        recent={[...new Set(audits.map(a => a.facility))].slice(0, 6)}
+        onStart={(f, loc, key, auditor, date) => { const a = buildAudit(f, loc, key, auditor, date); commit(prev => [a, ...prev]); setCurAudit(a.id); setView("audit"); }} />}
+
+      {view === "audit" && audit && <AuditView audit={audit}
+        onBack={() => setView("home")}
+        onSection={s => { setCurSection(s.id); setView("section"); }}
+        onProfile={() => setView("profile")}
+        onSops={() => setView("sops")}
+        onReport={() => setView("report")}
+        onDelete={() => deleteAudit(audit.id)} />}
+
+      {view === "profile" && audit && <ProfileView audit={audit} onBack={() => setView("audit")}
+        set={(k, v) => mutateAudit(audit.id, a => ({ ...a, profile: { ...a.profile, [k]: v } }))} />}
+
+      {view === "sops" && audit && <SopsView audit={audit} onBack={() => setView("audit")}
+        add={entry => mutateAudit(audit.id, a => ({ ...a, sops: [...a.sops, entry] }))}
+        update={(id, patch) => mutateAudit(audit.id, a => ({ ...a, sops: a.sops.map(s => s.id === id ? { ...s, ...patch } : s) }))}
+        remove={id => mutateAudit(audit.id, a => ({ ...a, sops: a.sops.filter(s => s.id !== id) }))} />}
+
+      {view === "section" && audit && section && <SectionView audit={audit} section={section}
+        onBack={() => setView("audit")}
+        setStatus={(iId, code) => setStatus(audit.id, section.id, iId, code)}
+        onDetail={iId => openDetail(audit.id, section.id, iId)} />}
+
+      {view === "item" && audit && section && item && <ItemDetail item={item} photoCache={photoCache}
+        onBack={() => setView("section")}
+        setStatus={setStatusHere}
+        setSeverity={sev => mutateItem(audit.id, section.id, item.id, it => ({ ...it, severity: sev }))}
+        setNote={n => mutateItem(audit.id, section.id, item.id, it => ({ ...it, note: n }))}
+        setEvidence={v => mutateItem(audit.id, section.id, item.id, it => ({ ...it, evidence: v }))}
+        setClosure={st => mutateItem(audit.id, section.id, item.id, it => ({ ...it, closure: st, closedDate: st === "closed" ? new Date().toISOString().slice(0, 10) : "" }))}
+        setClosureNote={n => mutateItem(audit.id, section.id, item.id, it => ({ ...it, closureNote: n }))}
+        onCamera={() => camRef.current?.click()} onLibrary={() => libRef.current?.click()}
+        onRemovePhoto={removePhoto} />}
+
+      {view === "report" && audit && <ReportView audit={audit} photoCache={photoCache} onBack={() => setView("audit")} />}
+    </div>
+  );
+}
+
+/* ============================== Home ============================== */
+function Home({ audits, onNew, onOpen, onReset }) {
+  const open = audits.filter(a => assessedCount(a) < itemsFlat(a).length).length;
+  const done = audits.length - open;
+  return (
+    <div className="view">
+      <div style={{ background: "var(--navy)", color: "#fff", padding: "20px 18px 22px" }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center" style={{ gap: 9 }}>
+            <span className="tag tag-lg" style={{ background: "var(--accent)", padding: "6px 6px 6px 8px" }}>
+              <span className="tag-hole" /><ClipboardList size={15} color="#fff" />
+            </span>
+            <div className="wd-h" style={{ fontSize: 22, fontWeight: 700, letterSpacing: -.3 }}>Walkdown</div>
+          </div>
+          {audits.length > 0 && (
+            <button onClick={onReset} className="press" style={{ color: "rgba(255,255,255,.55)", fontSize: 12 }}>Reset</button>
+          )}
+        </div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,.7)", marginTop: 6 }}>
+          Facility audit companion{audits.length > 0 ? ` · ${open} open · ${done} complete` : ""}
+        </div>
+      </div>
+
+      <div style={{ padding: 16, paddingBottom: 96 }}>
+        {audits.length === 0 ? (
+          <div className="card" style={{ padding: 22, textAlign: "center", marginTop: 8 }}>
+            <div className="wd-h" style={{ fontSize: 16, fontWeight: 600 }}>No audits yet</div>
+            <div style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 6, lineHeight: 1.5 }}>
+              Start one to begin walking a facility. Work the checklist, flag findings with photos, then export a report.
+            </div>
+          </div>
+        ) : audits.map(a => {
+          const total = itemsFlat(a).length, asd = assessedCount(a);
+          const fs = findingsList(a);
+          const crit = ncList(a).filter(f => f.severity === "critical").length;
+          const isDone = asd === total;
+          return (
+            <button key={a.id} onClick={() => onOpen(a)} className="card press"
+              style={{ display: "block", width: "100%", textAlign: "left", padding: 16, marginBottom: 12 }}>
+              <div className="flex items-center justify-between" style={{ gap: 8 }}>
+                <div className="wd-h" style={{ fontSize: 16, fontWeight: 600 }}>{a.facility}</div>
+                <span className="mono" style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6,
+                  background: isDone ? "#E7F4EC" : "#EAF6F6", color: isDone ? "#1E7C44" : "var(--accent-ink)", fontWeight: 600 }}>
+                  {isDone ? "COMPLETE" : "OPEN"}
+                </span>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 3 }}>{a.typeLabel} · {fmtDate(a.date)}</div>
+              <div className="flex items-center" style={{ gap: 8, margin: "12px 0 8px", flexWrap: "wrap" }}>
+                {fs.length === 0
+                  ? <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>No findings</span>
+                  : <>
+                      <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>{fs.length} finding{fs.length > 1 ? "s" : ""}</span>
+                      {crit > 0 && <SeverityTag sev="critical" count={crit} />}
+                    </>}
+              </div>
+              <div className="flex items-center" style={{ gap: 10 }}>
+                <div style={{ flex: 1 }}><Bar value={total ? asd / total : 0} /></div>
+                <span className="mono" style={{ fontSize: 12, color: "var(--ink-soft)" }}>{asd}/{total}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="no-print" style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: 16,
+        background: "linear-gradient(to top, var(--bg) 70%, transparent)" }}>
+        <button onClick={onNew} className="press wd-h"
+          style={{ width: "100%", background: "var(--navy)", color: "#fff", padding: "15px", borderRadius: 14,
+            fontWeight: 600, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <Plus size={20} /> Start new audit
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== New Audit ============================== */
+function NewAudit({ onBack, onStart, recent }) {
+  const [facility, setFacility] = useState("");
+  const [location, setLocation] = useState("");
+  const [type, setType] = useState("");
+  const [auditor, setAuditor] = useState("Kyle Shannon");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const ready = facility.trim() && type;
+
+  const Field = ({ icon, children }) => (
+    <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", marginBottom: 10 }}>
+      <span style={{ color: "var(--ink-soft)", flex: "none" }}>{icon}</span>{children}
+    </div>
+  );
+
+  return (
+    <div className="view">
+      <TopBar title="New audit" onBack={onBack} />
+      <div style={{ padding: 16, paddingBottom: 96 }}>
+        <Label>FACILITY</Label>
+        <div style={{ marginBottom: 10 }}>
+          <Field icon={<Building2 size={18} />}>
+            <input value={facility} onChange={e => setFacility(e.target.value)} placeholder="Facility or supplier name"
+              style={{ border: "none", outline: "none", width: "100%", fontSize: 15, background: "transparent" }} />
+          </Field>
+          <Field icon={<MapPin size={18} />}>
+            <input value={location} onChange={e => setLocation(e.target.value)} placeholder="Location (optional)"
+              style={{ border: "none", outline: "none", width: "100%", fontSize: 15, background: "transparent" }} />
+          </Field>
+        </div>
+        {recent.length > 0 && (
+          <div style={{ marginBottom: 18 }}>
+            <Label>RECENT</Label>
+            <div className="flex" style={{ gap: 8, flexWrap: "wrap" }}>
+              {recent.map(f => (
+                <button key={f} onClick={() => setFacility(f)} className="press"
+                  style={{ fontSize: 12, padding: "6px 11px", borderRadius: 99,
+                    border: "1px solid " + (facility === f ? "var(--accent)" : "var(--line)"),
+                    background: facility === f ? "#EAF6F6" : "var(--surface)",
+                    color: facility === f ? "var(--accent-ink)" : "var(--ink)" }}>{f}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <Label>AUDIT TYPE</Label>
+        <div style={{ marginBottom: 18 }}>
+          {Object.entries(TEMPLATES).map(([key, t]) => {
+            const sel = type === key;
+            const n = COMMON_SECTIONS.reduce((s, [, i]) => s + i.length, 0) + t.sections.reduce((s, [, i]) => s + i.length, 0);
+            return (
+              <button key={key} onClick={() => setType(key)} className="card press"
+                style={{ display: "block", width: "100%", textAlign: "left", padding: 14, marginBottom: 10,
+                  borderColor: sel ? "var(--accent)" : "var(--line)", borderWidth: sel ? 2 : 1,
+                  background: sel ? "#F5FBFB" : "var(--surface)" }}>
+                <div className="flex items-center justify-between">
+                  <div className="wd-h" style={{ fontWeight: 600, fontSize: 15 }}>{t.label}</div>
+                  {sel && <Check size={18} color="var(--accent-ink)" />}
+                </div>
+                <div className="mono" style={{ fontSize: 11, color: "var(--ink-soft)", marginTop: 4 }}>{t.framework} · {n} checks</div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex" style={{ gap: 10 }}>
+          <div style={{ flex: 1 }}>
+            <Label>AUDITOR</Label>
+            <Field icon={<User size={18} />}>
+              <input value={auditor} onChange={e => setAuditor(e.target.value)}
+                style={{ border: "none", outline: "none", width: "100%", fontSize: 15, background: "transparent" }} />
+            </Field>
+          </div>
+          <div style={{ flex: 1 }}>
+            <Label>DATE</Label>
+            <Field icon={<Calendar size={18} />}>
+              <input type="date" value={date} onChange={e => setDate(e.target.value)}
+                style={{ border: "none", outline: "none", width: "100%", fontSize: 15, background: "transparent" }} />
+            </Field>
+          </div>
+        </div>
+      </div>
+
+      <div className="no-print" style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: 16,
+        background: "linear-gradient(to top, var(--bg) 70%, transparent)" }}>
+        <button disabled={!ready} onClick={() => onStart(facility.trim(), location.trim(), type, auditor.trim() || "—", date)}
+          className="press wd-h" style={{ width: "100%", padding: 15, borderRadius: 14, fontWeight: 600, fontSize: 16,
+            background: ready ? "var(--navy)" : "var(--line)", color: ready ? "#fff" : "var(--ink-soft)" }}>
+          Start audit
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Facility profile ============================== */
+function ProfileView({ audit, onBack, set }) {
+  const p = audit.profile;
+  return (
+    <div className="view">
+      <TopBar title="Facility profile" subtitle={audit.facility} onBack={onBack} />
+      <div style={{ padding: 16, paddingBottom: 40 }}>
+        <div className="flex" style={{ gap: 10 }}>
+          <div style={{ flex: 1 }}><TextRow label="YEAR OPENED" value={p.yearOpened} onChange={v => set("yearOpened", v)} placeholder="e.g. 2008" /></div>
+          <div style={{ flex: 1 }}><TextRow label="EMPLOYEES" value={p.employees} onChange={v => set("employees", v)} placeholder="e.g. 120" /></div>
+        </div>
+        <div className="flex" style={{ gap: 10 }}>
+          <div style={{ flex: 1 }}><TextRow label="SHIFTS" value={p.shifts} onChange={v => set("shifts", v)} placeholder="e.g. 2" /></div>
+          <div style={{ flex: 1 }}><TextRow label="SIZE (SQ FT)" value={p.size} onChange={v => set("size", v)} placeholder="e.g. 80,000" /></div>
+        </div>
+        <TextRow label="PRODUCTS / PROCESSES" value={p.products} onChange={v => set("products", v)} placeholder="What they make or do here" multiline />
+        <TextRow label="CERTIFICATIONS / REGISTRATIONS" value={p.certifications} onChange={v => set("certifications", v)} placeholder="ISO 9001, cGMP, NSF, organic…" />
+        <TextRow label="FDA REGISTRATION #" value={p.fdaReg} onChange={v => set("fdaReg", v)} placeholder="Establishment registration" />
+        <TextRow label="PRIOR AUDIT DATE" value={p.lastAudit} onChange={v => set("lastAudit", v)} placeholder="Last audit on record" />
+        <TextRow label="PRIMARY CONTACT" value={p.contact} onChange={v => set("contact", v)} placeholder="Name, title" />
+        <TextRow label="NOTES" value={p.notes} onChange={v => set("notes", v)} placeholder="Anything else worth recording" multiline />
+      </div>
+    </div>
+  );
+}
+
+/* ============================== SOPs examined ============================== */
+function SopsView({ audit, onBack, add, update, remove }) {
+  const [num, setNum] = useState(""); const [title, setTitle] = useState("");
+  const [rev, setRev] = useState(""); const [note, setNote] = useState(""); const [flag, setFlag] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const formRef = useRef(null);
+
+  const reset = () => { setNum(""); setTitle(""); setRev(""); setNote(""); setFlag(false); setEditingId(null); };
+  const submit = () => {
+    if (!num.trim()) return;
+    const data = { number: num.trim(), title: title.trim(), rev: rev.trim(), note: note.trim(), flag };
+    if (editingId) update(editingId, data); else add({ id: uid(), ...data });
+    reset();
+  };
+  const startEdit = (s) => {
+    setEditingId(s.id); setNum(s.number); setTitle(s.title || ""); setRev(s.rev || ""); setNote(s.note || ""); setFlag(!!s.flag);
+    if (formRef.current) formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <div className="view">
+      <TopBar title="Documents examined" subtitle={`${audit.facility} · ${audit.sops.length} SOP${audit.sops.length === 1 ? "" : "s"}`} onBack={onBack} />
+      <div style={{ padding: 16, paddingBottom: 40 }}>
+        <div ref={formRef} className="card" style={{ padding: 14, marginBottom: 16, borderColor: editingId ? "var(--accent)" : "var(--line)", borderWidth: editingId ? 2 : 1 }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+            <div className="wd-h" style={{ fontSize: 13, fontWeight: 600 }}>{editingId ? "Edit SOP" : "Add SOP examined"}</div>
+            {editingId && <button onClick={reset} className="press" style={{ fontSize: 12, color: "var(--ink-soft)" }}>Cancel</button>}
+          </div>
+          <div className="flex" style={{ gap: 10 }}>
+            <div style={{ flex: 2 }}><TextRow label="SOP NUMBER" value={num} onChange={setNum} placeholder="SOP03-035" /></div>
+            <div style={{ flex: 1 }}><TextRow label="REV" value={rev} onChange={setRev} placeholder="A" /></div>
+          </div>
+          <TextRow label="TITLE" value={title} onChange={setTitle} placeholder="Title (optional)" />
+          <TextRow label="NOTE" value={note} onChange={setNote} placeholder="Observation (optional)" />
+          <button onClick={() => setFlag(!flag)} className="press"
+            style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--ink-soft)", marginBottom: 14 }}>
+            <span style={{ width: 20, height: 20, borderRadius: 5, border: "1.5px solid " + (flag ? "#C81E3A" : "var(--line)"),
+              background: flag ? "#C81E3A" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {flag && <Check size={13} color="#fff" />}
+            </span>
+            Flag a concern with this SOP
+          </button>
+          <button onClick={submit} disabled={!num.trim()} className="press wd-h"
+            style={{ width: "100%", padding: 13, borderRadius: 12, fontWeight: 600, fontSize: 15,
+              background: num.trim() ? "var(--accent)" : "var(--line)", color: num.trim() ? "#fff" : "var(--ink-soft)" }}>
+            {editingId ? "Save changes" : "Add SOP"}
+          </button>
+        </div>
+        {audit.sops.length === 0
+          ? <div style={{ fontSize: 13, color: "var(--ink-soft)", textAlign: "center", padding: "8px 0" }}>No documents recorded yet.</div>
+          : audit.sops.map(s => (
+            <div key={s.id} className="card" style={{ padding: 14, marginBottom: 10, display: "flex", justifyContent: "space-between", gap: 10,
+              borderColor: editingId === s.id ? "var(--accent)" : "var(--line)", borderWidth: editingId === s.id ? 2 : 1 }}>
+              <button onClick={() => startEdit(s)} className="press" style={{ textAlign: "left", minWidth: 0, flex: 1, background: "none" }}>
+                <div className="flex items-center" style={{ gap: 8, flexWrap: "wrap" }}>
+                  <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{s.number}</span>
+                  {s.rev && <span className="mono" style={{ fontSize: 11, color: "var(--ink-soft)" }}>Rev {s.rev}</span>}
+                  {s.flag && <PunchTag label="Concern" color="#C81E3A" fg="#fff" />}
+                </div>
+                {s.title && <div style={{ fontSize: 13, marginTop: 3 }}>{s.title}</div>}
+                {s.note && <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 3 }}>{s.note}</div>}
+              </button>
+              <div className="flex items-center" style={{ gap: 2, flex: "none" }}>
+                <button onClick={() => startEdit(s)} aria-label="Edit" className="press" style={{ color: "var(--ink-soft)", padding: 5 }}><Pencil size={15} /></button>
+                <button onClick={() => { if (editingId === s.id) reset(); remove(s.id); }} aria-label="Remove" className="press" style={{ color: "var(--ink-soft)", padding: 5 }}><Trash2 size={16} /></button>
+              </div>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Audit overview ============================== */
+function AuditView({ audit, onBack, onSection, onProfile, onSops, onReport, onDelete }) {
+  const total = itemsFlat(audit).length, done = assessedCount(audit);
+  const ncs = ncList(audit), ofis = ofiList(audit);
+  const counts = SEV_ORDER.map(k => [k, ncs.filter(f => f.severity === k).length]).filter(([, n]) => n > 0);
+  const filled = Object.values(audit.profile).filter(v => v && v.trim()).length;
+  return (
+    <div className="view">
+      <TopBar title={audit.facility} subtitle={audit.typeLabel} onBack={onBack}
+        right={<button onClick={onDelete} className="press" aria-label="Delete audit" style={{ padding: 6, color: "var(--ink-soft)" }}><Trash2 size={18} /></button>} />
+      <div style={{ padding: 16, paddingBottom: 96 }}>
+        <div className="card" style={{ padding: 16, marginBottom: 14 }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
+            <span className="mono" style={{ fontSize: 11, color: "var(--ink-soft)" }}>#{audit.id.slice(-6).toUpperCase()}</span>
+            <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{audit.location || "—"} · {fmtDate(audit.date)}</span>
+          </div>
+          <div className="flex items-center" style={{ gap: 10, marginBottom: 12 }}>
+            <div style={{ flex: 1 }}><Bar value={total ? done / total : 0} /></div>
+            <span className="mono" style={{ fontSize: 13, fontWeight: 600 }}>{done}/{total}</span>
+          </div>
+          <div className="flex items-center" style={{ gap: 8, flexWrap: "wrap" }}>
+            {ncs.length === 0 && ofis.length === 0
+              ? <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>No findings recorded</span>
+              : <>
+                  {counts.map(([k, n]) => <SeverityTag key={k} sev={k} count={n} />)}
+                  {ofis.length > 0 && <OfiTag count={ofis.length} />}
+                </>}
+          </div>
+        </div>
+
+        <div className="flex" style={{ gap: 10, marginBottom: 14 }}>
+          <button onClick={onProfile} className="card press" style={{ flex: 1, padding: 13, textAlign: "left" }}>
+            <div className="flex items-center" style={{ gap: 7, color: "var(--ink-soft)", marginBottom: 6 }}>
+              <Building2 size={16} /><span className="wd-h" style={{ fontSize: 12, fontWeight: 600 }}>Facility</span>
+            </div>
+            <div style={{ fontSize: 12, color: filled ? "var(--ink)" : "var(--ink-soft)" }}>{filled ? `${filled} fields filled` : "Add details"}</div>
+          </button>
+          <button onClick={onSops} className="card press" style={{ flex: 1, padding: 13, textAlign: "left" }}>
+            <div className="flex items-center" style={{ gap: 7, color: "var(--ink-soft)", marginBottom: 6 }}>
+              <FileText size={16} /><span className="wd-h" style={{ fontSize: 12, fontWeight: 600 }}>Documents</span>
+            </div>
+            <div style={{ fontSize: 12, color: audit.sops.length ? "var(--ink)" : "var(--ink-soft)" }}>{audit.sops.length ? `${audit.sops.length} SOP${audit.sops.length === 1 ? "" : "s"}` : "Add SOPs"}</div>
+          </button>
+        </div>
+
+        {audit.sections.map(s => {
+          const sd = secAssessed(s), st = s.items.length;
+          const sNc = s.items.filter(i => i.status === "NC").length;
+          const sOfi = s.items.filter(i => i.status === "OFI").length;
+          return (
+            <button key={s.id} onClick={() => onSection(s)} className="card press"
+              style={{ display: "block", width: "100%", textAlign: "left", padding: 14, marginBottom: 10 }}>
+              <div className="flex items-center justify-between">
+                <div className="wd-h" style={{ fontWeight: 600, fontSize: 15, paddingRight: 8 }}>{s.name}</div>
+                <div className="flex items-center" style={{ gap: 8, flex: "none" }}>
+                  {sNc > 0 && <span className="mono" style={{ fontSize: 11, color: "#C81E3A", fontWeight: 600 }}>{sNc} NC</span>}
+                  {sOfi > 0 && <span className="mono" style={{ fontSize: 11, color: STATUS.OFI.color, fontWeight: 600 }}>{sOfi} OFI</span>}
+                  <span className="mono" style={{ fontSize: 12, color: "var(--ink-soft)" }}>{sd}/{st}</span>
+                  <ChevronRight size={18} color="var(--ink-soft)" />
+                </div>
+              </div>
+              <div style={{ marginTop: 10 }}><Bar value={st ? sd / st : 0} /></div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="no-print" style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: 16,
+        background: "linear-gradient(to top, var(--bg) 70%, transparent)" }}>
+        <button onClick={onReport} className="press wd-h"
+          style={{ width: "100%", padding: 15, borderRadius: 14, fontWeight: 600, fontSize: 16, background: "var(--navy)", color: "#fff",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <FileText size={19} /> View report
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Section ============================== */
+function SectionView({ audit, section, onBack, setStatus, onDetail }) {
+  const sd = secAssessed(section), st = section.items.length;
+  return (
+    <div className="view">
+      <TopBar title={section.name} subtitle={`${audit.facility} · ${sd}/${st} assessed`} onBack={onBack} />
+      <div style={{ padding: "10px 16px 6px" }}>
+        <div className="mono" style={{ fontSize: 11, color: "var(--ink-soft)", lineHeight: 1.5 }}>
+          C conforming · OFI opportunity · NC nonconforming · N/A
+        </div>
+      </div>
+      <div style={{ padding: "4px 16px 32px" }}>
+        {section.items.map(it => (
+          <div key={it.id} className="card" style={{ padding: 14, marginBottom: 10 }}>
+            <div style={{ fontSize: 14, lineHeight: 1.4 }}>{it.requirement}</div>
+            {it.ref && <div className="mono" style={{ fontSize: 11, color: "var(--accent-ink)", marginTop: 5 }}>{it.ref}</div>}
+            <div style={{ marginTop: 12 }}>
+              <StampGroup status={it.status} onSet={code => setStatus(it.id, code)} />
+            </div>
+            <button onClick={() => onDetail(it.id)} className="press"
+              style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", marginTop: 10, padding: "9px 11px", borderRadius: 10,
+                background: it.status === "NC" ? "#FCF3F4" : it.status === "OFI" ? "#F1F4FB" : "var(--bg)",
+                border: "1px solid " + (it.status === "NC" ? "#F3D9DD" : it.status === "OFI" ? "#DBE3F4" : "var(--line)") }}>
+              <div className="flex items-center" style={{ gap: 8, minWidth: 0 }}>
+                {it.status === "NC" && <SeverityTag sev={it.severity} />}
+                {it.status === "OFI" && <OfiTag />}
+                <span style={{ fontSize: 12, color: "var(--ink-soft)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{preview(it)}</span>
+              </div>
+              <ChevronRight size={16} color="var(--ink-soft)" style={{ flex: "none" }} />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Item detail ============================== */
+function ItemDetail({ item, photoCache, onBack, setStatus, setSeverity, setNote, setEvidence, setClosure, setClosureNote, onCamera, onLibrary, onRemovePhoto }) {
+  const title = item.status === "NC" ? "Nonconformity" : item.status === "OFI" ? "Opportunity for improvement" : "Item detail";
+  return (
+    <div className="view">
+      <TopBar title={title} onBack={onBack} />
+      <div style={{ padding: 16, paddingBottom: 40 }}>
+        <div className="card" style={{ padding: 14, marginBottom: 16 }}>
+          <div style={{ fontSize: 14, lineHeight: 1.4 }}>{item.requirement}</div>
+          {item.ref && <div className="mono" style={{ fontSize: 11, color: "var(--accent-ink)", marginTop: 5 }}>{item.ref}</div>}
+        </div>
+
+        <Label>RESULT</Label>
+        <div style={{ margin: "0 0 18px" }}><StampGroup status={item.status} onSet={setStatus} /></div>
+
+        {item.status === "NC" && (
+          <>
+            <Label>SEVERITY</Label>
+            <div className="flex" style={{ gap: 8, flexWrap: "wrap", margin: "0 0 18px" }}>
+              {SEV_ORDER.map(k => {
+                const sel = item.severity === k;
+                return (
+                  <button key={k} onClick={() => setSeverity(k)} className="press"
+                    style={{ borderRadius: 8, padding: 2, opacity: sel ? 1 : .5, boxShadow: sel ? "0 0 0 2px var(--ink)" : "none" }}>
+                    <SeverityTag sev={k} size="lg" />
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        <Label>OBJECTIVE EVIDENCE</Label>
+        <input value={item.evidence} onChange={e => setEvidence(e.target.value)} placeholder="Record ID, lot #, sample size examined"
+          className="card" style={{ width: "100%", padding: "11px 13px", fontSize: 14, outline: "none", marginBottom: 18 }} />
+
+        <Label>OBSERVATION / NOTES</Label>
+        <textarea value={item.note} onChange={e => setNote(e.target.value)} rows={4}
+          placeholder="What did you observe, and against which requirement?"
+          className="card" style={{ width: "100%", padding: 14, fontSize: 14, lineHeight: 1.5, resize: "vertical", outline: "none", marginBottom: 18 }} />
+
+        <Label>PHOTO EVIDENCE</Label>
+        <div className="grid grid-cols-3" style={{ gap: 8, margin: "0 0 12px" }}>
+          {item.photos.map(p => (
+            <div key={p.id} style={{ position: "relative", aspectRatio: "1", borderRadius: 10, overflow: "hidden", background: "var(--line)" }}>
+              {photoCache[p.id]
+                ? <img src={photoCache[p.id]} alt="evidence" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "var(--ink-soft)" }}>…</div>}
+              {p.coords && <span style={{ position: "absolute", left: 4, bottom: 4, background: "rgba(0,0,0,.6)", color: "#fff", borderRadius: 6, padding: "2px 4px" }}><MapPin size={11} /></span>}
+              <button onClick={() => onRemovePhoto(p.id)} aria-label="Remove photo"
+                style={{ position: "absolute", top: 4, right: 4, background: "rgba(0,0,0,.6)", color: "#fff", borderRadius: 99, width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <X size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="flex" style={{ gap: 10, marginBottom: 18 }}>
+          <button onClick={onCamera} className="press wd-h" style={{ flex: 1, padding: "13px", borderRadius: 12, fontWeight: 600, fontSize: 14,
+            background: "var(--accent)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+            <Camera size={18} /> Capture
+          </button>
+          <button onClick={onLibrary} className="press wd-h" style={{ flex: 1, padding: "13px", borderRadius: 12, fontWeight: 600, fontSize: 14,
+            background: "var(--surface)", border: "1px solid var(--line)", color: "var(--ink)", display: "flex", alignItems: "center", justifyContent: "center", gap: 7 }}>
+            <ImagePlus size={18} /> Library
+          </button>
+        </div>
+
+        {isFinding(item) && (
+          <>
+            <Label>FOLLOW-UP</Label>
+            <div className="flex" style={{ gap: 8, marginBottom: 12 }}>
+              {[["open", "Open"], ["closed", "Closed"]].map(([val, lbl]) => {
+                const active = item.closure === val;
+                const color = val === "closed" ? "#2C9D5D" : "#C81E3A";
+                return (
+                  <button key={val} onClick={() => setClosure(val)} className="press wd-h"
+                    style={{ flex: 1, padding: 12, borderRadius: 10, fontWeight: 600, fontSize: 14,
+                      border: active ? "none" : "1.5px solid var(--line)",
+                      background: active ? color : "var(--surface)", color: active ? "#fff" : "var(--ink-soft)" }}>
+                    {lbl}{active && val === "closed" && item.closedDate ? ` · ${fmtDate(item.closedDate)}` : ""}
+                  </button>
+                );
+              })}
+            </div>
+            <textarea value={item.closureNote} onChange={e => setClosureNote(e.target.value)} rows={2}
+              placeholder="Corrective action / closure note"
+              className="card" style={{ width: "100%", padding: 14, fontSize: 14, lineHeight: 1.5, resize: "vertical", outline: "none", marginBottom: 18 }} />
+          </>
+        )}
+
+        <button onClick={onBack} className="press wd-h"
+          style={{ width: "100%", padding: 15, borderRadius: 14, fontWeight: 600, fontSize: 16, background: "var(--navy)", color: "#fff" }}>
+          Done
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Report ============================== */
+function ReportView({ audit, photoCache, onBack }) {
+  const total = itemsFlat(audit).length, done = assessedCount(audit);
+  const pending = total - done;
+  const ncs = ncList(audit), ofis = ofiList(audit);
+  const fs = findingsList(audit);
+  const openCount = fs.filter(f => f.closure !== "closed").length;
+  const closedCount = fs.filter(f => f.closure === "closed").length;
+  const counts = SEV_ORDER.map(k => [k, ncs.filter(f => f.severity === k).length]).filter(([, n]) => n > 0);
+
+  const ncSorted = audit.sections.flatMap(s => s.items.filter(i => i.status === "NC").map(i => ({ ...i, section: s.name }))).sort((a, b) => SEV_ORDER.indexOf(a.severity) - SEV_ORDER.indexOf(b.severity));
+  const ofiSorted = audit.sections.flatMap(s => s.items.filter(i => i.status === "OFI").map(i => ({ ...i, section: s.name })));
+  const allFindings = [...ncSorted, ...ofiSorted];
+
+  const p = audit.profile;
+  const prof = [
+    ["Year opened", p.yearOpened], ["Employees", p.employees], ["Shifts", p.shifts], ["Size (sq ft)", p.size],
+    ["Products / processes", p.products], ["Certifications", p.certifications], ["FDA registration", p.fdaReg],
+    ["Prior audit", p.lastAudit], ["Primary contact", p.contact],
+  ].filter(([, v]) => v && v.trim());
+
+  return (
+    <div className="view">
+      <TopBar title="Report" subtitle={audit.facility} onBack={onBack}
+        right={<button onClick={() => window.print()} className="press wd-h" style={{ fontSize: 13, fontWeight: 600, color: "var(--accent-ink)", padding: "6px 4px" }}>Export</button>} />
+
+      <div className="print-area" style={{ padding: 16, paddingBottom: 48 }}>
+        <div style={{ borderBottom: "2px solid var(--ink)", paddingBottom: 12, marginBottom: 14 }}>
+          <div className="wd-h" style={{ fontSize: 20, fontWeight: 700 }}>Facility Audit Report</div>
+          <div className="wd-h" style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>{audit.facility}</div>
+          <div className="mono" style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6, lineHeight: 1.7 }}>
+            {audit.typeLabel} · {audit.framework}<br />
+            #{audit.id.slice(-6).toUpperCase()} · {audit.location || "—"}<br />
+            Auditor: {audit.auditor} · {fmtDate(audit.date)}
+          </div>
+        </div>
+
+        {(prof.length > 0 || (p.notes && p.notes.trim())) && (
+          <div className="card" style={{ padding: 14, marginBottom: 16 }}>
+            <div className="wd-h" style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Facility</div>
+            {prof.map(([l, v]) => (
+              <div key={l} className="flex" style={{ justifyContent: "space-between", gap: 12, padding: "3px 0", fontSize: 13 }}>
+                <span style={{ color: "var(--ink-soft)" }}>{l}</span><span style={{ textAlign: "right" }}>{v}</span>
+              </div>
+            ))}
+            {p.notes && p.notes.trim() && <div style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 8, lineHeight: 1.5 }}>{p.notes}</div>}
+          </div>
+        )}
+
+        <div className="card" style={{ padding: 14, marginBottom: 16 }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: 10 }}>
+            <span className="wd-h" style={{ fontSize: 13, fontWeight: 600 }}>Summary</span>
+            <span className="mono" style={{ fontSize: 12, color: "var(--ink-soft)" }}>{done}/{total} assessed{pending ? ` · ${pending} pending` : ""}</span>
+          </div>
+          <div className="flex items-center" style={{ gap: 8, flexWrap: "wrap" }}>
+            {fs.length === 0
+              ? <span style={{ fontSize: 13, color: "#1E7C44", fontWeight: 600 }}>No findings recorded</span>
+              : <>
+                  {counts.map(([k, n]) => <SeverityTag key={k} sev={k} count={n} size="lg" />)}
+                  {ofis.length > 0 && <OfiTag count={ofis.length} size="lg" />}
+                </>}
+          </div>
+          {fs.length > 0 && (
+            <div className="mono" style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 10 }}>
+              {fs.length} finding{fs.length > 1 ? "s" : ""} · {openCount} open · {closedCount} closed
+            </div>
+          )}
+        </div>
+
+        {allFindings.length > 0 && (
+          <>
+            <div className="wd-h" style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-soft)", marginBottom: 10 }}>FINDINGS</div>
+            {allFindings.map(f => (
+              <div key={f.id} className="card" style={{ padding: 14, marginBottom: 10 }}>
+                <div className="flex items-center justify-between" style={{ gap: 8, marginBottom: 8 }}>
+                  {f.status === "NC" ? <SeverityTag sev={f.severity} /> : <OfiTag />}
+                  <span className="mono" style={{ fontSize: 11, color: "var(--ink-soft)" }}>{f.section}</span>
+                </div>
+                <div style={{ fontSize: 14, lineHeight: 1.4, fontWeight: 500 }}>{f.requirement}</div>
+                {f.ref && <div className="mono" style={{ fontSize: 11, color: "var(--accent-ink)", marginTop: 4 }}>{f.ref}</div>}
+                {f.evidence && <div style={{ fontSize: 13, marginTop: 8 }}><span style={{ color: "var(--ink-soft)" }}>Evidence: </span>{f.evidence}</div>}
+                {f.note && <div style={{ fontSize: 13, color: "var(--ink-soft)", marginTop: 6, lineHeight: 1.5 }}>{f.note}</div>}
+                {f.photos.length > 0 && (
+                  <div className="grid grid-cols-3" style={{ gap: 6, marginTop: 10 }}>
+                    {f.photos.map(ph => (
+                      <div key={ph.id} style={{ aspectRatio: "1", borderRadius: 8, overflow: "hidden", background: "var(--line)" }}>
+                        {photoCache[ph.id] && <img src={photoCache[ph.id]} alt="evidence" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="flex items-center" style={{ gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                  <span className="mono" style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, fontWeight: 600,
+                    background: f.closure === "closed" ? "#E7F4EC" : "#FBEEF0", color: f.closure === "closed" ? "#1E7C44" : "#C81E3A" }}>
+                    {f.closure === "closed" ? "CLOSED" : "OPEN"}{f.closure === "closed" && f.closedDate ? ` · ${fmtDate(f.closedDate)}` : ""}
+                  </span>
+                  {f.closureNote && <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{f.closureNote}</span>}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        <div className="wd-h" style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-soft)", margin: "4px 0 10px" }}>DOCUMENTS EXAMINED</div>
+        {audit.sops.length === 0
+          ? <div style={{ fontSize: 13, color: "var(--ink-soft)", marginBottom: 16 }}>None recorded.</div>
+          : <div className="card" style={{ padding: 6, marginBottom: 16 }}>
+              {audit.sops.map((s, i) => (
+                <div key={s.id} style={{ padding: "8px 8px", borderTop: i ? "1px solid var(--line)" : "none" }}>
+                  <div className="flex items-center" style={{ gap: 8, flexWrap: "wrap" }}>
+                    <span className="mono" style={{ fontSize: 12, fontWeight: 600 }}>{s.number}</span>
+                    {s.rev && <span className="mono" style={{ fontSize: 11, color: "var(--ink-soft)" }}>Rev {s.rev}</span>}
+                    {s.flag && <PunchTag label="Concern" color="#C81E3A" fg="#fff" />}
+                  </div>
+                  {s.title && <div style={{ fontSize: 12, marginTop: 2 }}>{s.title}</div>}
+                  {s.note && <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 2 }}>{s.note}</div>}
+                </div>
+              ))}
+            </div>}
+
+        {pending > 0 && (
+          <div style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 4, fontStyle: "italic" }}>
+            {pending} requirement{pending > 1 ? "s" : ""} not yet assessed.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+</script>
+</body>
+</html>
