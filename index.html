@@ -360,6 +360,14 @@ function TextRow({ label, value, onChange, placeholder, multiline }) {
   );
 }
 
+function Field({ icon, children }) {
+  return (
+    <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", marginBottom: 10 }}>
+      <span style={{ color: "var(--ink-soft)", flex: "none" }}>{icon}</span>{children}
+    </div>
+  );
+}
+
 function StampGroup({ status, onSet }) {
   return (
     <div className="flex" style={{ gap: 6 }}>
@@ -610,12 +618,6 @@ function NewAudit({ onBack, onStart, recent }) {
   const [auditor, setAuditor] = useState("Kyle Shannon");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const ready = facility.trim() && type;
-
-  const Field = ({ icon, children }) => (
-    <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", marginBottom: 10 }}>
-      <span style={{ color: "var(--ink-soft)", flex: "none" }}>{icon}</span>{children}
-    </div>
-  );
 
   return (
     <div className="view">
