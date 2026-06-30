@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Walkdown">
 <meta name="theme-color" content="#1B2A41">
 <title>Walkdown — Facility Audit</title>
@@ -326,7 +326,7 @@ function Bar({ value }) {
 
 function TopBar({ title, subtitle, onBack, right }) {
   return (
-    <div className="no-print" style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--surface)", borderBottom: "1px solid var(--line)" }}>
+    <div className="no-print" style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--surface)", borderBottom: "1px solid var(--line)", paddingTop: "env(safe-area-inset-top, 0px)" }}>
       <div className="flex items-center" style={{ padding: "12px 12px", gap: 8, minHeight: 56 }}>
         {onBack && (
           <button onClick={onBack} className="press" aria-label="Back" style={{ color: "var(--accent-ink)", padding: 6, marginLeft: -4 }}>
@@ -532,7 +532,7 @@ function Home({ audits, onNew, onOpen, onReset }) {
   const done = audits.length - open;
   return (
     <div className="view">
-      <div style={{ background: "var(--navy)", color: "#fff", padding: "20px 18px 22px" }}>
+      <div style={{ background: "var(--navy)", color: "#fff", padding: "20px 18px 22px", paddingTop: "calc(20px + env(safe-area-inset-top, 0px))" }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center" style={{ gap: 9 }}>
             <span className="tag tag-lg" style={{ background: "var(--accent)", padding: "6px 6px 6px 8px" }}>
