@@ -43,6 +43,7 @@ const ClipboardList = (p) => <Ico {...p}><rect x="8" y="2" width="8" height="4" 
 const X = (p) => <Ico {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Ico>;
 const Check = (p) => <Ico {...p}><path d="M20 6 9 17l-5-5"/></Ico>;
 const Pencil = (p) => <Ico {...p}><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></Ico>;
+const HelpCircle = (p) => <Ico {...p}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></Ico>;
 
 /* ============================== design tokens ============================== */
 const CSS = `
@@ -221,6 +222,73 @@ const TEMPLATES = {
       ]],
     ],
   },
+};
+
+const GUIDANCE = {
+  "Quality policy and measurable objectives established and communicated": { ev: "Quality policy document, current objectives/KPIs, and evidence of communication (postings, training).", ok: "Policy is approved and current, and staff can describe the objectives relevant to their work.", gap: "Policy is generic, outdated, or unknown to floor staff; objectives not measurable or not tracked." },
+  "Management review conducted on schedule with actions tracked": { ev: "Last one or two management review minutes, agenda, and an action log with owners and due dates.", ok: "Reviews held at defined frequency; inputs (metrics, audits, complaints) covered; actions assigned and closed.", gap: "Reviews skipped or overdue, no action tracking, or actions repeatedly carried over unresolved." },
+  "Roles, responsibilities, and QA independence defined": { ev: "Org chart, job descriptions, and reporting lines for the quality unit.", ok: "QA can reject or release independent of production pressure; responsibilities are documented.", gap: "QA reports into production/operations, or release authority is unclear or held by production." },
+  "Personnel competence verified for assigned tasks (training effectiveness)": { ev: "Training matrix, completion records, and competency assessments for sampled operators.", ok: "Training is role-specific and effectiveness is verified (test, observation, sign-off), not just attendance.", gap: "Sign-in sheets only, no competency check; gaps between assigned tasks and documented training." },
+  "Adequate resources and infrastructure provided": { ev: "Staffing plans, equipment/utility maintenance records, and evidence that issues get resourced.", ok: "Equipment, environment, and staffing are sufficient for the workload and maintained.", gap: "Chronic understaffing, deferred maintenance, or workarounds due to inadequate infrastructure." },
+  "Documents approved before use; current version available at point of use": { ev: "Document control log; pull a floor SOP and verify it is the approved current revision.", ok: "Documents are approved and dated before issue, and the point-of-use copy matches the controlled master.", gap: "Uncontrolled or superseded copies in use; missing approvals; floor revision differs from the master list." },
+  "Obsolete documents removed or marked to prevent unintended use": { ev: "Obsolete-document handling procedure; check work areas for outdated copies.", ok: "Superseded documents are withdrawn or clearly marked; only current versions are accessible.", gap: "Old revisions still posted at the line; no process to retrieve superseded copies." },
+  "Records legible, retrievable, and retained per schedule": { ev: "Record retention schedule; retrieve a sampled batch or QC record within a reasonable time.", ok: "Records are complete, legible, indexed, and retained for the defined period.", gap: "Records hard to retrieve, illegible, incomplete, or retention period undefined or not followed." },
+  "Record and data integrity controlled (versioning, access, audit trail)": { ev: "For electronic records, review access controls, audit-trail settings, and versioning on a key system.", ok: "Access is role-based, audit trails are on and not disableable, and data is attributable and traceable.", gap: "Shared logins, audit trail off or editable, no versioning, or ability to overwrite original data." },
+  "Risk-based thinking applied; risks and controls documented (e.g., FMEA)": { ev: "Risk assessments or FMEAs for key processes; check that controls tie back to identified risks.", ok: "Significant risks are identified, rated, and mitigated with documented, verified controls.", gap: "No formal risk analysis, FMEAs stale, or controls not linked to actual process risks." },
+  "Internal audit program established and self-audits performed": { ev: "Internal audit schedule, recent internal audit reports, and the resulting CAPAs.", ok: "Audits cover the system on a risk-based schedule, by independent auditors, with findings closed.", gap: "No program, audits overdue, auditors reviewing their own work, or findings left unresolved." },
+  "Process performance metrics trended and acted upon": { ev: "Trend charts (yield, right-first-time, deviations, complaints) and evidence of action on adverse trends.", ok: "Metrics are trended over time and adverse trends trigger investigation or action.", gap: "Data collected but not trended, or negative trends noted with no corrective action." },
+  "CAPA effectiveness verified and recurrence checked before closure": { ev: "Pull two or three closed CAPAs; review root cause, actions, and the effectiveness check before closure.", ok: "Root cause is real (not 'operator error'), actions address it, and effectiveness is verified before closing.", gap: "CAPAs closed without effectiveness verification; the same issue recurs; shallow root cause." },
+  "Nonconforming output identified, segregated, and dispositioned by authority": { ev: "NC/hold log, the physical quarantine area, and disposition records with authorized signatures.", ok: "NC material is identified, physically or systematically segregated, and dispositioned by authorized QA.", gap: "NC product not clearly marked, mixed with good stock, or dispositioned without QA authority." },
+  "Operator training records current and role-specific": { ev: "Training files for sampled operators versus the tasks they perform; cGMP training frequency.", ok: "Each operator is trained for their specific tasks and cGMP, with current, dated records.", gap: "Generic training only, expired refreshers, or operators doing tasks they are not trained for." },
+  "Gowning and hygiene practices defined and followed": { ev: "Gowning SOP; observe gowning at entry; check hygiene and health-reporting practices.", ok: "Gowning matches the SOP and is followed consistently; hygiene practices prevent contamination.", gap: "Inconsistent gowning, jewelry or exposed skin where prohibited, no illness reporting." },
+  "Equipment cleaning and use logs maintained": { ev: "Cleaning logs and equipment status tags for sampled equipment; cleaning validation if applicable.", ok: "Clean/dirty status is clear, logs are contemporaneous, and cleaning is validated for shared equipment.", gap: "Missing or backfilled logs, no clean-status indication, or cleaning method not validated." },
+  "Equipment qualified (IQ/OQ/PQ) with records on file": { ev: "Qualification protocols and reports for critical equipment; requalification triggers.", ok: "Critical equipment has completed, approved IQ/OQ/PQ and is requalified after major changes.", gap: "Equipment in use without qualification, incomplete protocols, or no requalification after moves or changes." },
+  "Calibration program for critical instruments": { ev: "Calibration schedule and current calibration stickers or certificates for critical instruments.", ok: "Critical instruments are calibrated on schedule against traceable standards, with current status shown.", gap: "Overdue calibrations, no status on instruments, or critical vs. non-critical not distinguished." },
+  "Calibration standards NIST-traceable; out-of-tolerance impact assessed": { ev: "Calibration certs showing NIST traceability; an out-of-tolerance event and its impact assessment.", ok: "Standards trace to NIST; OOT findings trigger assessment of product made since the last good calibration.", gap: "No traceability chain, or OOT instruments closed without assessing affected product." },
+  "Pest control program documented and effective": { ev: "Pest control contract, service reports, trap map, and the trend of sightings or catches.", ok: "Program is active with documented service, no evidence of infestation, and trends reviewed.", gap: "Missed services, evidence of pests, gaps in trap coverage, or no trending of activity." },
+  "Incoming components tested or CoA verified before use": { ev: "Receiving and testing records and CoAs for sampled lots; identity testing where required.", ok: "Each lot is tested or CoA-verified (with periodic confirmation) and released before use.", gap: "Components used before release, CoA accepted with no verification, or no identity check." },
+  "Supplier qualification program in place": { ev: "Approved supplier list, qualification records, and audit or monitoring history for key suppliers.", ok: "Suppliers are formally qualified, monitored, and requalified; only approved suppliers are used.", gap: "Unapproved suppliers in use, no qualification basis, or no ongoing performance monitoring." },
+  "Quarantine and release status controls enforced": { ev: "Status labeling or system; observe quarantine vs. released segregation in the warehouse.", ok: "Material status is unambiguous and enforced physically or in the system.", gap: "Released and quarantined stock intermixed, unclear status, or manual overrides without control." },
+  "Lot traceability maintained end to end": { ev: "Trace one finished lot back to components and forward to distribution.", ok: "Full genealogy is reconstructable in both directions within a reasonable time.", gap: "Broken links, missing lot records, or inability to trace a component to finished product." },
+  "In-process controls defined (fill weight, pH, viscosity)": { ev: "Batch records showing in-process checks, limits, and frequency; sampled results versus spec.", ok: "Critical parameters are checked at defined points against established limits and recorded.", gap: "IPCs undefined, limits missing, checks not performed, or out-of-limit results not actioned." },
+  "Line clearance performed and documented": { ev: "Line clearance records for a changeover; observe a clearance if possible.", ok: "Documented clearance verifies no prior product or materials remain before a new batch starts.", gap: "No clearance step, undocumented, or performed by one person with no verification." },
+  "Batch record reviewed before release": { ev: "Reviewed batch records with QA sign-off; how discrepancies are handled.", ok: "QA reviews the complete record, resolves discrepancies, and approves before release.", gap: "Records released with open discrepancies, missing entries, or no independent QA review." },
+  "Rework / reprocessing authorized and controlled": { ev: "Rework procedure and records of any rework, including justification and testing.", ok: "Rework is pre-authorized and documented, and the reworked lot is tested against normal criteria.", gap: "Undocumented rework, no authorization, or reworked product not additionally tested." },
+  "Stability program established and ongoing": { ev: "Stability protocol, pull schedule, and data for products on stability; expiry justification.", ok: "A running program supports assigned shelf life with on-schedule pulls and trended results.", gap: "Expiry not supported by data, pulls overdue, or adverse stability trends not investigated." },
+  "OOS investigation procedure defined": { ev: "OOS SOP and one or two completed OOS investigations (Phase I / Phase II).", ok: "OOS results trigger a structured investigation before any retest; conclusions are justified.", gap: "Testing into compliance, retest without investigation, or invalidations with no lab root cause." },
+  "Reference standards controlled and current": { ev: "Reference standard log, sources, expiry or qualification, and storage conditions.", ok: "Standards are qualified, in-date, traceable, and stored and handled correctly.", gap: "Expired or unqualified standards, no traceability, or improper storage." },
+  "Label issuance and reconciliation controlled": { ev: "Label issuance and reconciliation records for a batch; storage of printed labels.", ok: "Labels are issued in controlled quantities and reconciled (used + returned + destroyed = issued).", gap: "Reconciliation not performed, large unexplained variances, or uncontrolled label storage." },
+  "Expiration / lot coding verified on line": { ev: "In-line code verification records; sampled units for correct lot and expiry.", ok: "Coding is verified at start and during the run; correct, legible lot and expiry on product.", gap: "No coding verification, illegible or incorrect codes, or no challenge at startup." },
+  "MoCRA labeling elements present, incl. AE contact": { ev: "Current labels versus MoCRA requirements: domestic contact for adverse events, ingredient declaration.", ok: "Labels carry a domestic contact for serious AE reporting and the required MoCRA elements.", gap: "No AE contact on label, outdated ingredient declaration, or missing required elements." },
+  "Finished-product release criteria defined and met": { ev: "Release specifications and released-lot CoAs; who authorizes release.", ok: "Every lot meets defined finished-product specs and is released by authorized QA.", gap: "Release without complete testing, specs undefined, or production releasing product." },
+  "Consumer complaint and serious AE reporting process": { ev: "Complaint SOP, complaint log, and serious adverse event records and their timeliness.", ok: "Complaints are logged and investigated, and serious AEs are reported within 15 business days per MoCRA.", gap: "No AE process, missed reporting timelines, or complaints not trended or investigated." },
+  "Recall procedure documented and tested": { ev: "Recall SOP, mock recall records, and recall effectiveness or traceability results.", ok: "A written recall procedure exists and a recent mock recall met its trace time and target.", gap: "No recall procedure, never tested, or a mock recall that failed to reconcile distributed product." },
+  "Personnel qualified and trained for assigned tasks": { ev: "Training and qualification records for operators versus their assigned Part 111 tasks.", ok: "Personnel are qualified by education, training, or experience for their specific duties, documented.", gap: "Untrained personnel on critical steps, or no documented qualification basis." },
+  "Hygiene and gowning controls in place": { ev: "Hygiene SOP; observe practices; check illness and wound reporting.", ok: "Hygienic practices and gowning prevent contamination and are followed.", gap: "Poor hygiene practices, no gowning where needed, or no health reporting." },
+  "Sanitation program documented and verified": { ev: "Master sanitation schedule, cleaning records, and any verification (ATP, visual, micro).", ok: "Facility and equipment are cleaned per schedule with documented verification.", gap: "Missed sanitation, no verification, or cleaning not documented." },
+  "Identity testing on each incoming dietary ingredient": { ev: "Identity test method and results for each incoming dietary ingredient lot.", ok: "Every dietary ingredient lot has a scientifically valid identity test before use.", gap: "Identity testing skipped, relying on supplier CoA alone for identity, or invalid methods." },
+  "Specifications established for components and labels": { ev: "Written specs for components, in-process, finished product, and labels.", ok: "Specs are established, justified, and used for acceptance decisions.", gap: "Missing specs, no scientific basis, or specs not applied at acceptance." },
+  "CoA reliability verified before reliance": { ev: "Documentation qualifying supplier CoAs: initial verification testing and periodic re-confirmation.", ok: "CoA reliability is established by testing before relying on it, then periodically confirmed.", gap: "Relying on a CoA with no initial verification or periodic re-testing." },
+  "Master manufacturing record per product and batch size": { ev: "MMRs for sampled products; approval and content completeness.", ok: "Each unique formulation and batch size has an approved MMR with all required elements.", gap: "No MMR, MMR not followed, or missing content (controls, specs, theoretical yield)." },
+  "Batch production record completed for each batch": { ev: "Batch production records for recent batches; completeness and quality review.", ok: "BPRs are completed contemporaneously, follow the MMR, and are reviewed by quality.", gap: "Incomplete BPRs, deviations from the MMR, or no quality review before release." },
+  "In-process specs established and verified": { ev: "In-process control points, specs, and monitoring records.", ok: "Points where control is necessary are identified and verified against specs.", gap: "No in-process controls at critical points, or results not checked against specs." },
+  "Components and products held under proper conditions": { ev: "Storage condition monitoring (temperature, humidity) and physical storage observation.", ok: "Materials and products are held under conditions that protect against deterioration and contamination.", gap: "Uncontrolled storage conditions, no monitoring, or improper stacking or segregation." },
+  "Lot / batch traceability through distribution": { ev: "Distribution records; trace a finished lot to customers and back to components.", ok: "Distribution is traceable by lot to enable recall, and records are retained.", gap: "No lot-level distribution records or inability to trace product downstream." },
+  "Product complaint handling and review process": { ev: "Complaint SOP, complaint file, and quality review of complaints.", ok: "Complaints are recorded, investigated where they indicate a failure, and reviewed by quality.", gap: "No complaint process, complaints not investigated, or no quality involvement." },
+  "Serious adverse event reporting process": { ev: "SAE SOP, records, and evidence of timely reporting to FDA.", ok: "Serious AEs are reported to FDA within 15 business days, with records retained.", gap: "No SAE process, missed timelines, or no recordkeeping of AEs." },
+  "Access control restricts unauthorized entry": { ev: "Access control (badges, locks, visitor log); observe controlled areas.", ok: "Entry is restricted and logged; product areas are protected from unauthorized access.", gap: "Propped doors, no visitor control, or unrestricted access to product or hold areas." },
+  "Temperature / humidity monitored and recorded in storage": { ev: "Storage monitoring records or data loggers and how excursions and alarms are handled.", ok: "Conditions are continuously monitored and recorded, and excursions are investigated.", gap: "No monitoring, gaps in data, or excursions ignored with no product-impact assessment." },
+  "Damaged / returned / hold product physically segregated": { ev: "Designated segregation or quarantine areas; observe and check labeling.", ok: "Damaged, returned, and hold stock is physically separated and clearly identified.", gap: "Hold or damaged product mixed with sellable inventory or unlabeled." },
+  "FIFO / FEFO rotation enforced and verified": { ev: "Pick logic in the WMS and a physical spot-check of pick faces versus expiry.", ok: "Stock rotates first-expiry-first-out, verified by system and physical checks.", gap: "Long-dated stock shipped before short-dated, or no rotation controls." },
+  "Lot and expiration traceability in WMS": { ev: "WMS records showing lot and expiry capture from receipt through shipment.", ok: "Lot and expiry are captured and traceable throughout storage and shipping.", gap: "Lot or expiry not captured, or the system cannot report where a lot shipped." },
+  "Receiving inspection procedure followed": { ev: "Receiving SOP and inspection records (damage, temperature, count, documentation).", ok: "Inbound is inspected and documented against expected condition before put-away.", gap: "No receiving inspection, damage accepted without note, or missing documentation checks." },
+  "FDA / CBP hold handling procedure in place": { ev: "Hold SOP, examples of held shipments, and communication and records with quality.", ok: "Holds are recognized, product is secured, and quality is notified with documented handling.", gap: "No hold procedure, held product not secured, or holds released without authorization." },
+  "Returns and destruction documented with disposition": { ev: "Returns log, disposition decisions, and destruction records or certificates.", ok: "Returns are quarantined, assessed, dispositioned by quality, and destruction is documented.", gap: "Returns restocked without assessment, or destruction lacks documentation or authorization." },
+  "Quarantine area access-controlled and labeled": { ev: "Observe the quarantine area, its access controls, and labeling.", ok: "Quarantine is a defined, access-controlled, clearly labeled area.", gap: "Quarantine undefined, unlocked, or unlabeled; anyone can move held stock." },
+  "Pick / pack accuracy controls and verification": { ev: "Pick/pack verification method (scanning, checks) and the error or mispick rate.", ok: "Accuracy is verified (e.g., scan verification) with a low, trended error rate.", gap: "No verification step, high mispick rate, or errors not tracked." },
+  "Carrier qualification and temperature compliance": { ev: "Carrier qualification records and temperature data for controlled shipments.", ok: "Carriers are qualified, and cold-chain shipments meet temperature requirements with data.", gap: "Unqualified carriers, no shipping temperature data, or excursions unaddressed." },
+  "Logistics quality agreement current and signed": { ev: "The signed quality or logistics agreement and its review date.", ok: "A current, signed agreement defines responsibilities and is within its review cycle.", gap: "No agreement, unsigned, expired, or responsibilities undefined." },
+  "SOPs current and training records maintained": { ev: "SOP list with revision status and training records for sampled staff.", ok: "SOPs are current and controlled, and staff are trained with current records.", gap: "Outdated SOPs in use, or no training records for people performing the work." },
 };
 
 /* ============================== helpers ============================== */
@@ -453,6 +521,33 @@ function Field({ icon, children }) {
   return (
     <div className="card" style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", marginBottom: 10 }}>
       <span style={{ color: "var(--ink-soft)", flex: "none" }}>{icon}</span>{children}
+    </div>
+  );
+}
+
+const GRow = ({ label, text }) => (
+  <div style={{ marginBottom: 6 }}>
+    <span className="wd-h" style={{ fontWeight: 600, color: "var(--ink)", fontSize: 11 }}>{label}: </span>
+    <span style={{ color: "var(--ink-soft)" }}>{text}</span>
+  </div>
+);
+
+function Guidance({ requirement }) {
+  const g = GUIDANCE[requirement];
+  const [open, setOpen] = useState(false);
+  if (!g) return null;
+  return (
+    <div style={{ marginTop: 9 }}>
+      <button onClick={() => setOpen(o => !o)} className="press" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: "var(--accent-ink)", fontWeight: 600 }}>
+        <HelpCircle size={13} /> How to assess <span style={{ fontSize: 10 }}>{open ? "▾" : "▸"}</span>
+      </button>
+      {open && (
+        <div style={{ marginTop: 8, padding: "10px 12px", background: "#F4FAFA", border: "1px solid #D7E8E8", borderRadius: 10, fontSize: 12, lineHeight: 1.5 }}>
+          <GRow label="Pull" text={g.ev} />
+          <GRow label="Conforming" text={g.ok} />
+          <div><span className="wd-h" style={{ fontWeight: 600, color: "var(--ink)", fontSize: 11 }}>Common gaps: </span><span style={{ color: "var(--ink-soft)" }}>{g.gap}</span></div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1143,6 +1238,7 @@ function SectionView({ audit, section, onBack, setStatus, onDetail }) {
           <div key={it.id} className="card" style={{ padding: 14, marginBottom: 10 }}>
             <div style={{ fontSize: 14, lineHeight: 1.4 }}>{it.requirement}</div>
             {it.ref && <div className="mono" style={{ fontSize: 11, color: "var(--accent-ink)", marginTop: 5 }}>{it.ref}</div>}
+            <Guidance requirement={it.requirement} />
             <div style={{ marginTop: 12 }}>
               <StampGroup status={it.status} onSet={code => setStatus(it.id, code)} />
             </div>
@@ -1174,6 +1270,7 @@ function ItemDetail({ item, photoCache, onBack, setStatus, setSeverity, setNote,
         <div className="card" style={{ padding: 14, marginBottom: 16 }}>
           <div style={{ fontSize: 14, lineHeight: 1.4 }}>{item.requirement}</div>
           {item.ref && <div className="mono" style={{ fontSize: 11, color: "var(--accent-ink)", marginTop: 5 }}>{item.ref}</div>}
+          <Guidance requirement={item.requirement} />
         </div>
 
         <Label>RESULT</Label>
