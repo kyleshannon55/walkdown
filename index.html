@@ -477,6 +477,99 @@ function StampGroup({ status, onSet }) {
 }
 
 /* ============================== app ============================== */
+/* ============================== iPad two-pane ============================== */
+function useWide(bp) {
+  const [wide, setWide] = useState(() => typeof window !== "undefined" && window.innerWidth >= bp);
+  useEffect(() => {
+    const on = () => setWide(window.innerWidth >= bp);
+    on();
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, [bp]);
+  return wide;
+}
+
+function TwoPane({ left, right }) {
+  return (
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+      <div style={{ width: 340, flex: "none", borderRight: "1px solid var(--line)", overflowY: "auto", background: "var(--surface)" }}>{left}</div>
+      <div style={{ flex: 1, overflowY: "auto", background: "var(--bg)" }}>
+        <div style={{ maxWidth: 860, margin: "0 auto", height: "100%" }}>{right}</div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyDetail() {
+  return (
+    <div className="flex items-center" style={{ height: "100%", justifyContent: "center", padding: 40 }}>
+      <div style={{ textAlign: "center", color: "var(--ink-soft)", maxWidth: 320 }}>
+        <ClipboardList size={34} color="var(--line)" />
+        <div className="wd-h" style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)", marginTop: 12 }}>Select a section</div>
+        <div style={{ fontSize: 13, marginTop: 6, lineHeight: 1.5 }}>Choose a section to work through its checklist, or open the report from the list.</div>
+      </div>
+    </div>
+  );
+}
+
+function AuditNav({ audit, view, curSection, onHome, onSection, onProfile, onSops, onReport, onDelete }) {
+  const total = itemsFlat(audit).length, done = assessedCount(audit);
+  const ncs = ncList(audit), ofis = ofiList(audit);
+  const counts = SEV_ORDER.map(k => [k, ncs.filter(f => f.severity === k).length]).filter(([, n]) => n > 0);
+  const filled = Object.values(audit.profile).filter(v => v && v.trim()).length;
+  const navRow = (label, sub, active, onClick, icon) => (
+    <button onClick={onClick} className="press" style={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", textAlign: "left", padding: "11px 12px", borderRadius: 10, marginBottom: 6, background: active ? "#EAF6F6" : "transparent", border: "1px solid " + (active ? "#BEE3E3" : "transparent") }}>
+      <span className="flex items-center" style={{ gap: 9 }}>
+        <span style={{ color: active ? "var(--accent-ink)" : "var(--ink-soft)", display: "flex" }}>{icon}</span>
+        <span className="wd-h" style={{ fontSize: 14, fontWeight: 600, color: active ? "var(--accent-ink)" : "var(--ink)" }}>{label}</span>
+      </span>
+      {sub ? <span className="mono" style={{ fontSize: 12, color: "var(--ink-soft)" }}>{sub}</span> : <ChevronRight size={15} color="var(--ink-soft)" />}
+    </button>
+  );
+  return (
+    <div>
+      <TopBar title={audit.facility} subtitle={audit.typeLabel} onBack={onHome}
+        right={<button onClick={onDelete} className="press" aria-label="Delete audit" style={{ padding: 6, color: "var(--ink-soft)" }}><Trash2 size={18} /></button>} />
+      <div style={{ padding: 14 }}>
+        <div className="card" style={{ padding: 14, marginBottom: 14 }}>
+          <div className="flex items-center" style={{ gap: 10, marginBottom: 10 }}>
+            <div style={{ flex: 1 }}><Bar value={total ? done / total : 0} /></div>
+            <span className="mono" style={{ fontSize: 12, fontWeight: 600 }}>{done}/{total}</span>
+          </div>
+          <div className="flex items-center" style={{ gap: 8, flexWrap: "wrap" }}>
+            {ncs.length === 0 && ofis.length === 0
+              ? <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>No findings</span>
+              : <>{counts.map(([k, n]) => <SeverityTag key={k} sev={k} count={n} />)}{ofis.length > 0 && <OfiTag count={ofis.length} />}</>}
+          </div>
+        </div>
+        {navRow("Facility profile", filled ? String(filled) : "", view === "profile", onProfile, <Building2 size={16} />)}
+        {navRow("Documents", audit.sops.length ? String(audit.sops.length) : "", view === "sops", onSops, <FileText size={16} />)}
+        {navRow("Report", "", view === "report", onReport, <ClipboardList size={16} />)}
+        <div style={{ height: 1, background: "var(--line)", margin: "10px 2px 12px" }} />
+        {audit.sections.map(s => {
+          const sd = secAssessed(s), st = s.items.length;
+          const sNc = s.items.filter(i => i.status === "NC").length;
+          const sOfi = s.items.filter(i => i.status === "OFI").length;
+          const active = (view === "section" || view === "item") && curSection === s.id;
+          return (
+            <button key={s.id} onClick={() => onSection(s)} className="press" style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 12px", borderRadius: 10, marginBottom: 6, background: active ? "#EAF6F6" : "transparent", border: "1px solid " + (active ? "#BEE3E3" : "transparent") }}>
+              <div className="flex items-center justify-between">
+                <span className="wd-h" style={{ fontWeight: 600, fontSize: 14, color: active ? "var(--accent-ink)" : "var(--ink)", paddingRight: 8 }}>{s.name}</span>
+                <span className="flex items-center" style={{ gap: 6, flex: "none" }}>
+                  {sNc > 0 && <span className="mono" style={{ fontSize: 10, color: "#C81E3A", fontWeight: 600 }}>{sNc}NC</span>}
+                  {sOfi > 0 && <span className="mono" style={{ fontSize: 10, color: STATUS.OFI.color, fontWeight: 600 }}>{sOfi}OFI</span>}
+                  <span className="mono" style={{ fontSize: 11, color: "var(--ink-soft)" }}>{sd}/{st}</span>
+                </span>
+              </div>
+              <div style={{ marginTop: 8 }}><Bar value={st ? sd / st : 0} /></div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [view, setView] = useState("home");
   const [audits, setAudits] = useState([]);
@@ -488,6 +581,7 @@ function App() {
   const [warn, setWarn] = useState(null);
   const camRef = useRef(null);
   const libRef = useRef(null);
+  const wide = useWide(1000);
 
   useEffect(() => { (async () => {
     if (hasStore) { const raw = await store.get("audits:v1"); if (raw) { try { setAudits(JSON.parse(raw)); } catch {} } }
@@ -574,6 +668,55 @@ function App() {
 
   if (loading) return <div className="wd"><div style={{ padding: 24, color: "var(--ink-soft)" }}>Loading…</div></div>;
 
+  const inAudit = !!audit && ["audit", "section", "item", "report", "profile", "sops"].includes(view);
+  if (wide && inAudit) {
+    const right =
+      view === "section" && section ? (
+        <SectionView audit={audit} section={section}
+          setStatus={(iId, code) => setStatus(audit.id, section.id, iId, code)}
+          onDetail={iId => openDetail(audit.id, section.id, iId)} />
+      ) : view === "item" && item ? (
+        <ItemDetail item={item} photoCache={photoCache} onBack={() => setView("section")}
+          setStatus={setStatusHere}
+          setSeverity={sev => mutateItem(audit.id, section.id, item.id, it => ({ ...it, severity: sev }))}
+          setNote={n => mutateItem(audit.id, section.id, item.id, it => ({ ...it, note: n }))}
+          setEvidence={v => mutateItem(audit.id, section.id, item.id, it => ({ ...it, evidence: v }))}
+          setClosure={st => mutateItem(audit.id, section.id, item.id, it => ({ ...it, closure: st, closedDate: st === "closed" ? new Date().toISOString().slice(0, 10) : "" }))}
+          setClosureNote={n => mutateItem(audit.id, section.id, item.id, it => ({ ...it, closureNote: n }))}
+          onCamera={() => camRef.current?.click()} onLibrary={() => libRef.current?.click()} onRemovePhoto={removePhoto} />
+      ) : view === "report" ? (
+        <ReportView audit={audit} photoCache={photoCache} />
+      ) : view === "profile" ? (
+        <ProfileView audit={audit} set={(k, v) => mutateAudit(audit.id, a => ({ ...a, profile: { ...a.profile, [k]: v } }))} />
+      ) : view === "sops" ? (
+        <SopsView audit={audit}
+          add={entry => mutateAudit(audit.id, a => ({ ...a, sops: [...a.sops, entry] }))}
+          update={(id, patch) => mutateAudit(audit.id, a => ({ ...a, sops: a.sops.map(s => s.id === id ? { ...s, ...patch } : s) }))}
+          remove={id => mutateAudit(audit.id, a => ({ ...a, sops: a.sops.filter(s => s.id !== id) }))} />
+      ) : (
+        <EmptyDetail />
+      );
+    return (
+      <div className="wd">
+        <style>{CSS}</style>
+        <input ref={camRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={e => { addPhoto(e.target.files?.[0]); e.target.value = ""; }} />
+        <input ref={libRef} type="file" accept="image/*" style={{ display: "none" }} onChange={e => { addPhoto(e.target.files?.[0]); e.target.value = ""; }} />
+        {warn && (
+          <div className="no-print" onClick={() => setWarn(null)} style={{ position: "fixed", bottom: 16, left: 12, right: 12, zIndex: 50, background: "var(--navy)", color: "#fff", padding: "12px 14px", borderRadius: 12, fontSize: 13, boxShadow: "0 6px 20px rgba(0,0,0,.25)" }}>
+            {warn} <span style={{ opacity: .7, marginLeft: 8 }}>Tap to dismiss</span>
+          </div>
+        )}
+        <TwoPane
+          left={<AuditNav audit={audit} view={view} curSection={curSection}
+            onHome={() => setView("home")}
+            onSection={s => { setCurSection(s.id); setView("section"); }}
+            onProfile={() => setView("profile")} onSops={() => setView("sops")} onReport={() => setView("report")}
+            onDelete={() => deleteAudit(audit.id)} />}
+          right={right} />
+      </div>
+    );
+  }
+
   return (
     <div className="wd">
       <style>{CSS}</style>
@@ -642,6 +785,7 @@ function Home({ audits, onNew, onOpen, onReset }) {
   return (
     <div className="view">
       <div style={{ background: "var(--navy)", color: "#fff", padding: "20px 18px 22px", paddingTop: "calc(20px + env(safe-area-inset-top, 0px))" }}>
+       <div style={{ maxWidth: 720, margin: "0 auto" }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center" style={{ gap: 9 }}>
             <span className="tag tag-lg" style={{ background: "var(--accent)", padding: "6px 6px 6px 8px" }}>
@@ -656,9 +800,10 @@ function Home({ audits, onNew, onOpen, onReset }) {
         <div style={{ fontSize: 13, color: "rgba(255,255,255,.7)", marginTop: 6 }}>
           Facility audit companion{audits.length > 0 ? ` · ${open} open · ${done} complete` : ""}
         </div>
+       </div>
       </div>
 
-      <div style={{ padding: 16, paddingBottom: 96 }}>
+      <div style={{ padding: 16, paddingBottom: 96, maxWidth: 720, margin: "0 auto" }}>
         {audits.length === 0 ? (
           <div className="card" style={{ padding: 22, textAlign: "center", marginTop: 8 }}>
             <div className="wd-h" style={{ fontSize: 16, fontWeight: 600 }}>No audits yet</div>
@@ -701,11 +846,13 @@ function Home({ audits, onNew, onOpen, onReset }) {
 
       <div className="no-print" style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: 16,
         background: "linear-gradient(to top, var(--bg) 70%, transparent)" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
         <button onClick={onNew} className="press wd-h"
           style={{ width: "100%", background: "var(--navy)", color: "#fff", padding: "15px", borderRadius: 14,
             fontWeight: 600, fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
           <Plus size={20} /> Start new audit
         </button>
+        </div>
       </div>
     </div>
   );
@@ -723,7 +870,7 @@ function NewAudit({ onBack, onStart, recent }) {
   return (
     <div className="view">
       <TopBar title="New audit" onBack={onBack} />
-      <div style={{ padding: 16, paddingBottom: 96 }}>
+      <div style={{ padding: 16, paddingBottom: 96, maxWidth: 720, margin: "0 auto" }}>
         <Label>FACILITY</Label>
         <div style={{ marginBottom: 10 }}>
           <Field icon={<Building2 size={18} />}>
@@ -790,11 +937,13 @@ function NewAudit({ onBack, onStart, recent }) {
 
       <div className="no-print" style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: 16,
         background: "linear-gradient(to top, var(--bg) 70%, transparent)" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
         <button disabled={!ready} onClick={() => onStart(facility.trim(), location.trim(), type, auditor.trim() || "—", date)}
           className="press wd-h" style={{ width: "100%", padding: 15, borderRadius: 14, fontWeight: 600, fontSize: 16,
             background: ready ? "var(--navy)" : "var(--line)", color: ready ? "#fff" : "var(--ink-soft)" }}>
           Start audit
         </button>
+        </div>
       </div>
     </div>
   );
