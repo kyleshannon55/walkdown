@@ -1,0 +1,9 @@
+{
+  "name": "Walkdown — Facility Audit",
+  "short_name": "Walkdown",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EDEFF2",
+  "theme_color": "#1B2A41"
+}
