@@ -54,6 +54,7 @@ const CSS = `
 .wd{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
 .wd-h{font-family:'Space Grotesk',system-ui,sans-serif}
 .mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.flex{display:flex}.items-center{align-items:center}.justify-between{justify-content:space-between}.grid{display:grid}.grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
 button{font-family:inherit;cursor:pointer;border:none;background:none}
 input,textarea{font-family:inherit}
 .tag{display:inline-flex;align-items:center;gap:6px;border-radius:5px;line-height:1;position:relative}
@@ -231,6 +232,56 @@ const store = {
   async del(k){ try { localStorage.removeItem(k); } catch {} },
 };
 
+const photoDB = {
+  _p: null,
+  open() {
+    if (this._p) return this._p;
+    this._p = new Promise((res, rej) => {
+      try {
+        if (typeof indexedDB === "undefined") return rej(new Error("no-idb"));
+        const req = indexedDB.open("walkdown_photos", 1);
+        req.onupgradeneeded = () => req.result.createObjectStore("p");
+        req.onsuccess = () => res(req.result);
+        req.onerror = () => rej(req.error);
+      } catch (e) { rej(e); }
+    });
+    return this._p;
+  },
+  async get(id) {
+    try {
+      const db = await this.open();
+      return await new Promise((res, rej) => {
+        const r = db.transaction("p").objectStore("p").get(id);
+        r.onsuccess = () => res(r.result == null ? null : r.result);
+        r.onerror = () => rej(r.error);
+      });
+    } catch { return null; }
+  },
+  async set(id, val) {
+    try {
+      const db = await this.open();
+      return await new Promise((res, rej) => {
+        const t = db.transaction("p", "readwrite");
+        t.objectStore("p").put(val, id);
+        t.oncomplete = () => res(true);
+        t.onerror = () => rej(t.error);
+        t.onabort = () => rej(t.error);
+      });
+    } catch { return false; }
+  },
+  async del(id) {
+    try {
+      const db = await this.open();
+      await new Promise((res) => {
+        const t = db.transaction("p", "readwrite");
+        t.objectStore("p").delete(id);
+        t.oncomplete = () => res();
+        t.onerror = () => res();
+      });
+    } catch {}
+  },
+};
+
 const blankProfile = () => ({
   yearOpened: "", employees: "", shifts: "", size: "", products: "",
   certifications: "", fdaReg: "", lastAudit: "", contact: "", notes: "",
@@ -406,16 +457,22 @@ function App() {
   })(); }, []);
 
   useEffect(() => {
-    if (!hasStore || (view !== "item" && view !== "report")) return;
+    if (view !== "item" && view !== "report") return;
     const a = audits.find(x => x.id === curAudit); if (!a) return;
     const ids = [];
     itemsFlat(a).forEach(it => it.photos.forEach(p => { if (!(p.id in photoCache)) ids.push(p.id); }));
     if (!ids.length) return;
+    let cancelled = false;
     (async () => {
       const up = {};
-      for (const id of ids) { const d = await store.get("photo:" + id); if (d) up[id] = d; }
-      if (Object.keys(up).length) setPhotoCache(c => ({ ...c, ...up }));
+      for (const id of ids) {
+        let d = await photoDB.get(id);
+        if (d == null) { try { d = localStorage.getItem("photo:" + id); } catch {} }
+        if (d) up[id] = d;
+      }
+      if (!cancelled && Object.keys(up).length) setPhotoCache(c => ({ ...c, ...up }));
     })();
+    return () => { cancelled = true; };
   }, [view, curAudit, audits]); // eslint-disable-line
 
   const commit = (updater) => setAudits(prev => {
@@ -451,19 +508,25 @@ function App() {
   }
   async function addPhoto(file) {
     if (!file) return;
-    try {
-      const data = await downscale(file);
-      const id = uid();
-      const coords = await getCoords();
-      setPhotoCache(c => ({ ...c, [id]: data }));
-      const ok = hasStore ? await store.set("photo:" + id, data) : true;
-      mutateItem(audit.id, section.id, item.id, it => ({ ...it, photos: [...it.photos, { id, ts: Date.now(), coords }] }));
-      if (!ok) setWarn("Photo kept for this session but couldn’t be saved locally (size limit).");
-    } catch { setWarn("Couldn’t read that image. Try another."); }
+    let data;
+    try { data = await downscale(file); }
+    catch { setWarn("Couldn’t read that image. Try another."); return; }
+    const id = uid();
+    const aId = audit.id, sId = section.id, iId = item.id;
+    setPhotoCache(c => ({ ...c, [id]: data }));
+    mutateItem(aId, sId, iId, it => ({ ...it, photos: [...it.photos, { id, ts: Date.now(), coords: null }] }));
+    let ok = await photoDB.set(id, data);
+    if (!ok) { try { localStorage.setItem("photo:" + id, data); ok = true; } catch {} }
+    if (!ok) setWarn("Photo kept for this session but couldn’t be saved on this device.");
+    getCoords().then(coords => {
+      if (coords) mutateItem(aId, sId, iId, it => ({ ...it, photos: it.photos.map(p => p.id === id ? { ...p, coords } : p) }));
+    });
   }
   function removePhoto(pid) {
-    if (hasStore) store.del("photo:" + pid);
+    photoDB.del(pid);
+    try { localStorage.removeItem("photo:" + pid); } catch {}
     mutateItem(audit.id, section.id, item.id, it => ({ ...it, photos: it.photos.filter(p => p.id !== pid) }));
+    setPhotoCache(c => { const n = { ...c }; delete n[pid]; return n; });
   }
   function deleteAudit(id) {
     if (!window.confirm("Delete this audit and its findings? This can’t be undone.")) return;
@@ -1045,8 +1108,9 @@ function ReportView({ audit, photoCache, onBack }) {
           <div className="wd-h" style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>{audit.facility}</div>
           <div className="mono" style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 6, lineHeight: 1.7 }}>
             {audit.typeLabel} · {audit.framework}<br />
-            #{audit.id.slice(-6).toUpperCase()} · {audit.location || "—"}<br />
-            Auditor: {audit.auditor} · {fmtDate(audit.date)}
+            Location: {audit.location || "—"}<br />
+            Auditor: {audit.auditor} · {fmtDate(audit.date)}<br />
+            Report ID: {audit.id.slice(-6).toUpperCase()}
           </div>
         </div>
 
