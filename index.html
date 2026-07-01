@@ -1051,6 +1051,126 @@ const findingsList = a => itemsFlat(a).filter(isFinding);
 const ncList = a => itemsFlat(a).filter(i => i.status === "NC");
 const ofiList = a => itemsFlat(a).filter(i => i.status === "OFI");
 const secAssessed = s => s.items.filter(i => i.status !== "pending").length;
+
+/* ---- Audit health score: severity-weighted conformance ----
+   Each applicable check earns a fraction of its point. N/A and pending are excluded.
+   Score = earned / scored. OFIs are tracked but non-scoring. Bands are guardrailed so a
+   high score can't mask a critical (or promote a facility with an open major to "Excellent"). */
+const SCORE_W = {
+  C: 1,
+  OFI: 1,
+  minor: 0.6,
+  major: 0.3,
+  critical: 0
+};
+const BAND_TONE = {
+  good: {
+    fg: "#1E7C44",
+    bg: "#E7F4EC"
+  },
+  ok: {
+    fg: "#0A6E6E",
+    bg: "#E6F3F3"
+  },
+  warn: {
+    fg: "#8A5A00",
+    bg: "#FBF0D8"
+  },
+  crit: {
+    fg: "#B42318",
+    bg: "#FCE9E7"
+  },
+  muted: {
+    fg: "#5B626D",
+    bg: "#EDEFF2"
+  }
+};
+function auditScore(a) {
+  const items = itemsFlat(a);
+  const counts = {
+    C: 0,
+    OFI: 0,
+    minor: 0,
+    major: 0,
+    critical: 0,
+    NA: 0,
+    pending: 0
+  };
+  let earned = 0,
+    scored = 0;
+  items.forEach(it => {
+    if (it.status === "pending") {
+      counts.pending++;
+      return;
+    }
+    if (it.status === "N/A") {
+      counts.NA++;
+      return;
+    }
+    scored++;
+    if (it.status === "C") {
+      earned += SCORE_W.C;
+      counts.C++;
+    } else if (it.status === "OFI") {
+      earned += SCORE_W.OFI;
+      counts.OFI++;
+    } else if (it.status === "NC") {
+      const sev = it.severity || "minor";
+      earned += SCORE_W[sev] != null ? SCORE_W[sev] : SCORE_W.minor;
+      counts[sev != null && sev in counts ? sev : "minor"]++;
+    }
+  });
+  const pct = scored ? Math.round(earned / scored * 100) : null;
+  const conform = scored ? Math.round((counts.C + counts.OFI) / scored * 100) : null;
+  let band;
+  if (scored === 0) band = {
+    label: "Not scored",
+    tone: "muted"
+  };else if (counts.critical > 0) band = {
+    label: "Action required",
+    tone: "crit"
+  };else if (pct >= 95 && counts.major === 0) band = {
+    label: "Excellent",
+    tone: "good"
+  };else if (pct >= 85) band = {
+    label: "Good",
+    tone: "ok"
+  };else if (pct >= 70) band = {
+    label: "Marginal",
+    tone: "warn"
+  };else band = {
+    label: "Action required",
+    tone: "crit"
+  };
+  return {
+    scored,
+    earned,
+    pct,
+    conform,
+    counts,
+    band,
+    total: items.length
+  };
+}
+const ScorePill = ({
+  band,
+  small
+}) => {
+  const t = BAND_TONE[band.tone] || BAND_TONE.muted;
+  return /*#__PURE__*/React.createElement("span", {
+    className: "wd-h",
+    style: {
+      fontSize: small ? 10.5 : 12,
+      fontWeight: 700,
+      padding: small ? "2px 7px" : "3px 9px",
+      borderRadius: 999,
+      background: t.bg,
+      color: t.fg,
+      whiteSpace: "nowrap",
+      letterSpacing: .2
+    }
+  }, band.label);
+};
 const fmtDate = iso => {
   try {
     return new Date(iso + "T00:00").toLocaleDateString(undefined, {
@@ -1577,6 +1697,7 @@ function AuditNav({
     ofis = ofiList(audit);
   const counts = SEV_ORDER.map(k => [k, ncs.filter(f => f.severity === k).length]).filter(([, n]) => n > 0);
   const filled = Object.values(audit.profile).filter(v => v && v.trim()).length;
+  const sc = auditScore(audit);
   const navRow = (label, sub, active, onClick, icon) => /*#__PURE__*/React.createElement("button", {
     onClick: onClick,
     className: "press",
@@ -1645,6 +1766,37 @@ function AuditNav({
       marginBottom: 14
     }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between",
+    style: {
+      marginBottom: 10,
+      paddingBottom: 10,
+      borderBottom: "1px solid var(--line)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: 5
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "wd-h",
+    style: {
+      fontSize: 11,
+      fontWeight: 600,
+      color: "var(--ink-soft)"
+    }
+  }, "Health"), /*#__PURE__*/React.createElement("span", {
+    className: "wd-h",
+    style: {
+      fontSize: 20,
+      fontWeight: 700,
+      lineHeight: 1,
+      color: (BAND_TONE[sc.band.tone] || BAND_TONE.muted).fg
+    }
+  }, sc.pct == null ? "—" : sc.pct)), /*#__PURE__*/React.createElement(ScorePill, {
+    band: sc.band,
+    small: true
+  })), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center",
     style: {
       gap: 10,
@@ -2401,6 +2553,7 @@ function Home({
     const fs = findingsList(a);
     const crit = ncList(a).filter(f => f.severity === "critical").length;
     const isDone = asd === total;
+    const sc = auditScore(a);
     return /*#__PURE__*/React.createElement("button", {
       key: a.id,
       onClick: () => onOpen(a),
@@ -2421,9 +2574,19 @@ function Home({
       className: "wd-h",
       style: {
         fontSize: 16,
-        fontWeight: 600
+        fontWeight: 600,
+        paddingRight: 4
       }
     }, a.facility), /*#__PURE__*/React.createElement("span", {
+      className: "flex items-center",
+      style: {
+        gap: 6,
+        flex: "none"
+      }
+    }, sc.pct != null && /*#__PURE__*/React.createElement(ScorePill, {
+      band: sc.band,
+      small: true
+    }), /*#__PURE__*/React.createElement("span", {
       className: "mono",
       style: {
         fontSize: 11,
@@ -2433,7 +2596,7 @@ function Home({
         color: isDone ? "#1E7C44" : "var(--accent-ink)",
         fontWeight: 600
       }
-    }, isDone ? "COMPLETE" : "OPEN")), /*#__PURE__*/React.createElement("div", {
+    }, isDone ? "COMPLETE" : "OPEN"))), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 12,
         color: "var(--ink-soft)",
@@ -2465,7 +2628,15 @@ function Home({
       style: {
         gap: 10
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, sc.pct != null && /*#__PURE__*/React.createElement("span", {
+      className: "mono",
+      style: {
+        fontSize: 13,
+        fontWeight: 700,
+        color: (BAND_TONE[sc.band.tone] || BAND_TONE.muted).fg,
+        minWidth: 24
+      }
+    }, sc.pct), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1
       }
@@ -3125,6 +3296,7 @@ function AuditView({
     ofis = ofiList(audit);
   const counts = SEV_ORDER.map(k => [k, ncs.filter(f => f.severity === k).length]).filter(([, n]) => n > 0);
   const filled = Object.values(audit.profile).filter(v => v && v.trim()).length;
+  const sc = auditScore(audit);
   return /*#__PURE__*/React.createElement("div", {
     className: "view"
   }, /*#__PURE__*/React.createElement(TopBar, {
@@ -3154,6 +3326,43 @@ function AuditView({
       marginBottom: 14
     }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between",
+    style: {
+      marginBottom: 12,
+      paddingBottom: 12,
+      borderBottom: "1px solid var(--line)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: 5
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "wd-h",
+    style: {
+      fontSize: 12,
+      fontWeight: 600,
+      color: "var(--ink-soft)"
+    }
+  }, "Health"), /*#__PURE__*/React.createElement("span", {
+    className: "wd-h",
+    style: {
+      fontSize: 24,
+      fontWeight: 700,
+      lineHeight: 1,
+      color: (BAND_TONE[sc.band.tone] || BAND_TONE.muted).fg
+    }
+  }, sc.pct == null ? "—" : sc.pct), sc.pct != null && /*#__PURE__*/React.createElement("span", {
+    className: "wd-h",
+    style: {
+      fontSize: 12,
+      color: "var(--ink-soft)"
+    }
+  }, "/100")), /*#__PURE__*/React.createElement(ScorePill, {
+    band: sc.band,
+    small: true
+  })), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center justify-between",
     style: {
       marginBottom: 10
@@ -3734,6 +3943,7 @@ function ReportView({
   const openCount = fs.filter(f => f.closure !== "closed").length;
   const closedCount = fs.filter(f => f.closure === "closed").length;
   const counts = SEV_ORDER.map(k => [k, ncs.filter(f => f.severity === k).length]).filter(([, n]) => n > 0);
+  const sc = auditScore(audit);
   const ncSorted = audit.sections.flatMap(s => s.items.filter(i => i.status === "NC").map(i => ({
     ...i,
     section: s.name
@@ -3865,6 +4075,27 @@ function ReportView({
         }
       }));
     }
+    k.push(P(T("Audit Health", {
+      bold: true,
+      size: 26
+    }), {
+      spacing: {
+        before: 240,
+        after: 100
+      }
+    }));
+    k.push(P([T(sc.pct == null ? "Not scored" : `${sc.pct}/100`, {
+      bold: true,
+      size: 30
+    }), T(`     ${sc.band.label}`, {
+      bold: true,
+      size: 22,
+      color: (BAND_TONE[sc.band.tone] || BAND_TONE.muted).fg.replace("#", "")
+    })]));
+    k.push(P(T(`${sc.conform == null ? "—" : sc.conform + "%"} conformance · ${sc.scored} scored${sc.counts.NA ? ` · ${sc.counts.NA} N/A` : ""}${sc.counts.critical ? ` · ${sc.counts.critical} critical` : ""}`, {
+      size: 20,
+      color: gray
+    })));
     k.push(P(T("Summary", {
       bold: true,
       size: 26
@@ -4042,6 +4273,7 @@ function ReportView({
       h += `</table>`;
       if (p.notes && p.notes.trim()) h += `<p style="font-family:Arial">${esc(p.notes)}</p>`;
     }
+    h += `<h3 style="font-family:Arial">Audit Health</h3><p style="font-family:Arial"><span style="font-size:22pt;font-weight:bold">${sc.pct == null ? "Not scored" : esc(sc.pct) + "/100"}</span> &nbsp; <b style="color:${(BAND_TONE[sc.band.tone] || BAND_TONE.muted).fg}">${esc(sc.band.label)}</b><br><span style="color:#586070">${sc.conform == null ? "&mdash;" : esc(sc.conform) + "%"} conformance &middot; ${esc(sc.scored)} scored${sc.counts.NA ? ` &middot; ${esc(sc.counts.NA)} N/A` : ""}${sc.counts.critical ? ` &middot; ${esc(sc.counts.critical)} critical` : ""}</span></p>`;
     h += `<h3 style="font-family:Arial">Summary</h3><p style="font-family:Arial">${esc(done)}/${esc(total)} assessed${pending ? ` &middot; ${pending} pending` : ""}<br>`;
     if (fs.length) {
       const parts = counts.map(([kk, n]) => `${SEV[kk].label}: ${n}`);
@@ -4178,6 +4410,96 @@ function ReportView({
       lineHeight: 1.5
     }
   }, p.notes)), /*#__PURE__*/React.createElement("div", {
+    className: "card",
+    style: {
+      padding: 16,
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between",
+    style: {
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "wd-h",
+    style: {
+      fontSize: 12,
+      fontWeight: 600,
+      color: "var(--ink-soft)",
+      letterSpacing: .3,
+      textTransform: "uppercase"
+    }
+  }, "Audit Health"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "baseline",
+      gap: 3,
+      marginTop: 4
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "wd-h",
+    style: {
+      fontSize: 40,
+      fontWeight: 700,
+      lineHeight: 1,
+      color: (BAND_TONE[sc.band.tone] || BAND_TONE.muted).fg
+    }
+  }, sc.pct == null ? "—" : sc.pct), sc.pct != null && /*#__PURE__*/React.createElement("span", {
+    className: "wd-h",
+    style: {
+      fontSize: 15,
+      fontWeight: 600,
+      color: "var(--ink-soft)"
+    }
+  }, "/100"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      textAlign: "right"
+    }
+  }, /*#__PURE__*/React.createElement(ScorePill, {
+    band: sc.band
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mono",
+    style: {
+      fontSize: 11,
+      color: "var(--ink-soft)",
+      marginTop: 8
+    }
+  }, sc.conform == null ? "—" : sc.conform + "%", " conformance"), /*#__PURE__*/React.createElement("div", {
+    className: "mono",
+    style: {
+      fontSize: 11,
+      color: "var(--ink-soft)",
+      marginTop: 2
+    }
+  }, sc.scored, " scored", sc.counts.NA ? ` · ${sc.counts.NA} N/A` : ""))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 8,
+      borderRadius: 99,
+      background: "var(--line)",
+      overflow: "hidden",
+      marginTop: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: "100%",
+      width: (sc.pct || 0) + "%",
+      background: (BAND_TONE[sc.band.tone] || BAND_TONE.muted).fg,
+      borderRadius: 99,
+      transition: "width .3s"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11.5,
+      color: "var(--ink-soft)",
+      marginTop: 12,
+      lineHeight: 1.5
+    }
+  }, "Severity-weighted conformance across applicable checks (N/A excluded). Nonconformances reduce the score by severity; OFIs are tracked but non-scoring.", sc.counts.critical > 0 && /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: BAND_TONE.crit.fg,
+      fontWeight: 600
+    }
+  }, " ", sc.counts.critical, " critical finding", sc.counts.critical > 1 ? "s" : "", " \u2014 rating capped regardless of score."))), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       padding: 14,
@@ -4398,11 +4720,7 @@ function ReportView({
   }, pending, " requirement", pending > 1 ? "s" : "", " not yet assessed.")));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('./sw.js').catch(function(){});
-  });
-}
+if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function(){}); }); }
 
 </script>
 </body>
