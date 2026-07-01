@@ -17,6 +17,7 @@
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/@babel/standalone@7/babel.min.js" crossorigin></script>
+<script src="https://unpkg.com/docx@8.5.0/build/index.umd.js" crossorigin></script>
 </head>
 <body>
 <div id="root"><div class="boot">Loading Walkdown…</div></div>
@@ -340,6 +341,43 @@ function getCoords() {
       () => resolve(null), { timeout: 4000, maximumAge: 60000 }
     );
   });
+}
+function dataUrlToBytes(dataUrl) {
+  const b64 = dataUrl.split(",")[1] || "";
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+function imgSize(dataUrl) {
+  return new Promise((res) => {
+    const im = new Image();
+    im.onload = () => res({ w: im.naturalWidth || 240, h: im.naturalHeight || 240 });
+    im.onerror = () => res({ w: 240, h: 240 });
+    im.src = dataUrl;
+  });
+}
+async function getPhotoData(id) {
+  let d = await photoDB.get(id);
+  if (d == null) { try { d = localStorage.getItem("photo:" + id); } catch {} }
+  return d;
+}
+function sanitizeName(s) {
+  return (String(s || "audit").replace(/[^a-z0-9\- ]/gi, "").trim().replace(/\s+/g, "-").slice(0, 60)) || "audit";
+}
+async function saveBlob(blob, name, type) {
+  try {
+    const file = (typeof File !== "undefined") ? new File([blob], name, { type }) : null;
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: name }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
+    }
+  } catch {}
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { try { document.body.removeChild(a); } catch {} URL.revokeObjectURL(url); }, 1500);
 }
 function preview(it) {
   const bits = [];
@@ -1097,10 +1135,153 @@ function ReportView({ audit, photoCache, onBack }) {
     ["Prior audit", p.lastAudit], ["Primary contact", p.contact],
   ].filter(([, v]) => v && v.trim());
 
+  const [busy, setBusy] = useState(false);
+  const fileName = "Walkdown - " + sanitizeName(audit.facility) + " - " + audit.date;
+
+  async function exportWord() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (window.docx) await buildDocx();
+      else exportDocHtml();
+    } catch (err) {
+      try { exportDocHtml(); } catch {}
+    } finally { setBusy(false); }
+  }
+
+  async function buildDocx() {
+    const D = window.docx;
+    const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle, ImageRun } = D;
+    const gray = "586070", teal = "0A6E6E", red = "C81E3A";
+    const P = (runs, opts = {}) => new Paragraph({ ...opts, children: Array.isArray(runs) ? runs : [runs] });
+    const T = (text, o = {}) => new TextRun({ text, ...o });
+    const k = [];
+
+    k.push(P(T("Facility Audit Report", { bold: true, size: 36 })));
+    k.push(P(T(audit.facility, { bold: true, size: 28 }), { spacing: { after: 120 } }));
+    [`${audit.typeLabel} · ${audit.framework}`,
+     `Location: ${audit.location || "—"}`,
+     `Auditor: ${audit.auditor} · ${fmtDate(audit.date)}`,
+     `Report ID: ${audit.id.slice(-6).toUpperCase()}`
+    ].forEach(t => k.push(P(T(t, { size: 20, color: gray }))));
+
+    if (prof.length || (p.notes && p.notes.trim())) {
+      k.push(P(T("Facility", { bold: true, size: 26 }), { spacing: { before: 240, after: 100 } }));
+      if (prof.length) {
+        const nb = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+        const bd = { top: nb, left: nb, right: nb, bottom: { style: BorderStyle.SINGLE, size: 2, color: "DCE0E6" } };
+        k.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: prof.map(([l, v]) => new TableRow({ children: [
+            new TableCell({ width: { size: 38, type: WidthType.PERCENTAGE }, borders: bd, children: [P(T(l, { size: 20, color: gray }))] }),
+            new TableCell({ width: { size: 62, type: WidthType.PERCENTAGE }, borders: bd, children: [P(T(String(v), { size: 20 }))] }),
+          ] })),
+        }));
+      }
+      if (p.notes && p.notes.trim()) k.push(P(T(p.notes, { size: 20 }), { spacing: { before: 100 } }));
+    }
+
+    k.push(P(T("Summary", { bold: true, size: 26 }), { spacing: { before: 240, after: 100 } }));
+    k.push(P(T(`${done}/${total} assessed${pending ? ` · ${pending} pending` : ""}`, { size: 20 })));
+    if (fs.length) {
+      const parts = counts.map(([kk, n]) => `${SEV[kk].label}: ${n}`);
+      if (ofis.length) parts.push(`OFI: ${ofis.length}`);
+      k.push(P(T(parts.join("     "), { size: 20, bold: true })));
+      k.push(P(T(`${fs.length} findings · ${openCount} open · ${closedCount} closed`, { size: 20, color: gray })));
+    } else {
+      k.push(P(T("No findings recorded", { size: 20 })));
+    }
+
+    if (allFindings.length) {
+      k.push(P(T("Findings", { bold: true, size: 26 }), { spacing: { before: 240, after: 60 } }));
+      for (const f of allFindings) {
+        const label = f.status === "NC" ? SEV[f.severity].label.toUpperCase() : "OFI";
+        const lc = f.status === "NC" ? SEV[f.severity].color.replace("#", "") : "3457A6";
+        k.push(P([T(label, { bold: true, size: 20, color: lc }), T(`     ${f.section}`, { size: 18, color: gray })], { spacing: { before: 160 } }));
+        k.push(P(T(f.requirement, { bold: true, size: 22 })));
+        if (f.ref) k.push(P(T(f.ref, { size: 18, color: teal })));
+        if (f.evidence) k.push(P([T("Evidence: ", { bold: true, size: 20 }), T(f.evidence, { size: 20 })]));
+        if (f.note) k.push(P(T(f.note, { size: 20 })));
+        for (const ph of f.photos) {
+          const data = photoCache[ph.id] || await getPhotoData(ph.id);
+          if (!data) continue;
+          try {
+            const { w, h } = await imgSize(data);
+            const scale = Math.min(1, 260 / w);
+            k.push(P(new ImageRun({ type: "jpg", data: dataUrlToBytes(data), transformation: { width: Math.round(w * scale), height: Math.round(h * scale) } }), { spacing: { before: 80 } }));
+          } catch {}
+        }
+        const closed = f.closure === "closed";
+        k.push(P([
+          T(`Status: ${closed ? "Closed" : "Open"}${closed && f.closedDate ? ` (${fmtDate(f.closedDate)})` : ""}`, { size: 18, color: gray, bold: true }),
+          ...(f.closureNote ? [T(` — ${f.closureNote}`, { size: 18, color: gray })] : []),
+        ], { spacing: { before: 40 } }));
+      }
+    }
+
+    k.push(P(T("Documents examined", { bold: true, size: 26 }), { spacing: { before: 240, after: 60 } }));
+    if (!audit.sops.length) k.push(P(T("None recorded.", { size: 20, color: gray })));
+    else audit.sops.forEach(s => {
+      const runs = [T(s.number, { bold: true, size: 20 })];
+      if (s.rev) runs.push(T(`   Rev ${s.rev}`, { size: 18, color: gray }));
+      if (s.flag) runs.push(T("   [Concern]", { bold: true, size: 18, color: red }));
+      k.push(P(runs, { spacing: { before: 80 } }));
+      if (s.title) k.push(P(T(s.title, { size: 20 })));
+      if (s.note) k.push(P(T(s.note, { size: 18, color: gray })));
+    });
+
+    if (pending > 0) k.push(P(T(`${pending} requirement${pending > 1 ? "s" : ""} not yet assessed.`, { italics: true, size: 18, color: gray }), { spacing: { before: 200 } }));
+
+    const doc = new Document({ sections: [{ properties: {}, children: k }] });
+    const blob = await Packer.toBlob(doc);
+    await saveBlob(blob, fileName + ".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  }
+
+  function exportDocHtml() {
+    const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    let h = `<h1 style="font-family:Arial">Facility Audit Report</h1><h2 style="font-family:Arial">${esc(audit.facility)}</h2>`;
+    h += `<p style="font-family:Consolas,monospace;color:#586070">${esc(audit.typeLabel)} &middot; ${esc(audit.framework)}<br>Location: ${esc(audit.location || "—")}<br>Auditor: ${esc(audit.auditor)} &middot; ${esc(fmtDate(audit.date))}<br>Report ID: ${esc(audit.id.slice(-6).toUpperCase())}</p>`;
+    if (prof.length || (p.notes && p.notes.trim())) {
+      h += `<h3 style="font-family:Arial">Facility</h3><table cellpadding="4" style="font-family:Arial;border-collapse:collapse">`;
+      prof.forEach(([l, v]) => { h += `<tr><td style="color:#586070">${esc(l)}</td><td>${esc(v)}</td></tr>`; });
+      h += `</table>`;
+      if (p.notes && p.notes.trim()) h += `<p style="font-family:Arial">${esc(p.notes)}</p>`;
+    }
+    h += `<h3 style="font-family:Arial">Summary</h3><p style="font-family:Arial">${esc(done)}/${esc(total)} assessed${pending ? ` &middot; ${pending} pending` : ""}<br>`;
+    if (fs.length) {
+      const parts = counts.map(([kk, n]) => `${SEV[kk].label}: ${n}`); if (ofis.length) parts.push(`OFI: ${ofis.length}`);
+      h += `<b>${esc(parts.join("   "))}</b><br>${fs.length} findings &middot; ${openCount} open &middot; ${closedCount} closed`;
+    } else h += `No findings recorded`;
+    h += `</p>`;
+    if (allFindings.length) {
+      h += `<h3 style="font-family:Arial">Findings</h3>`;
+      allFindings.forEach(f => {
+        const label = f.status === "NC" ? SEV[f.severity].label.toUpperCase() : "OFI";
+        h += `<p style="font-family:Arial"><b>${esc(label)}</b> &middot; <span style="color:#586070">${esc(f.section)}</span><br><b>${esc(f.requirement)}</b>`;
+        if (f.ref) h += `<br><span style="color:#0A6E6E">${esc(f.ref)}</span>`;
+        if (f.evidence) h += `<br><b>Evidence:</b> ${esc(f.evidence)}`;
+        if (f.note) h += `<br>${esc(f.note)}`;
+        h += `</p>`;
+        f.photos.forEach(ph => { const data = photoCache[ph.id]; if (data) h += `<p><img src="${data}" style="max-width:260px"/></p>`; });
+        const closed = f.closure === "closed";
+        h += `<p style="font-family:Arial;color:#586070">Status: ${closed ? "Closed" : "Open"}${closed && f.closedDate ? ` (${esc(fmtDate(f.closedDate))})` : ""}${f.closureNote ? " — " + esc(f.closureNote) : ""}</p>`;
+      });
+    }
+    h += `<h3 style="font-family:Arial">Documents examined</h3>`;
+    if (!audit.sops.length) h += `<p style="font-family:Arial;color:#586070">None recorded.</p>`;
+    else audit.sops.forEach(s => { h += `<p style="font-family:Arial"><b>${esc(s.number)}</b>${s.rev ? `  Rev ${esc(s.rev)}` : ""}${s.flag ? `  <span style="color:#C81E3A"><b>[Concern]</b></span>` : ""}${s.title ? `<br>${esc(s.title)}` : ""}${s.note ? `<br><span style="color:#586070">${esc(s.note)}</span>` : ""}</p>`; });
+    if (pending > 0) h += `<p style="font-family:Arial;color:#586070"><i>${pending} requirement${pending > 1 ? "s" : ""} not yet assessed.</i></p>`;
+    const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body>${h}</body></html>`;
+    saveBlob(new Blob(["\ufeff" + html], { type: "application/msword" }), fileName + ".doc", "application/msword");
+  }
+
   return (
     <div className="view">
       <TopBar title="Report" subtitle={audit.facility} onBack={onBack}
-        right={<button onClick={() => window.print()} className="press wd-h" style={{ fontSize: 13, fontWeight: 600, color: "var(--accent-ink)", padding: "6px 4px" }}>Export</button>} />
+        right={<div className="flex items-center" style={{ gap: 14 }}>
+          <button onClick={() => window.print()} className="press wd-h" style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-soft)", padding: "6px 2px" }}>PDF</button>
+          <button onClick={exportWord} disabled={busy} className="press wd-h" style={{ fontSize: 13, fontWeight: 600, color: "var(--accent-ink)", padding: "6px 2px" }}>{busy ? "…" : "Word"}</button>
+        </div>} />
 
       <div className="print-area" style={{ padding: 16, paddingBottom: 48 }}>
         <div style={{ borderBottom: "2px solid var(--ink)", paddingBottom: 12, marginBottom: 14 }}>
