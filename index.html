@@ -570,6 +570,12 @@ const isFinding = it => it.status === "NC" || it.status === "OFI";
 
 /* Management-system sections (ISO 19011 / ISO 9001) prepended to every template */
 const COMMON_SECTIONS = [["Management Responsibility", [["Quality policy and measurable objectives established and communicated", "ISO 9001 §5.2"], ["Management review conducted on schedule with actions tracked", "ISO 9001 §9.3"], ["Roles, responsibilities, and QA independence defined", "ISO 9001 §5.3"], ["Personnel competence verified for assigned tasks (training effectiveness)", "ISO 9001 §7.2"], ["Adequate resources and infrastructure provided", "ISO 9001 §7.1"]]], ["Document & Record Control", [["Documents approved before use; current version available at point of use", "ISO 9001 §7.5.2"], ["Obsolete documents removed or marked to prevent unintended use", "ISO 9001 §7.5.3"], ["Records legible, retrievable, and retained per schedule", "ISO 9001 §7.5.3"], ["Record and data integrity controlled (versioning, access, audit trail)", "Data integrity"]]], ["Risk, Nonconformance & Improvement", [["Risk-based thinking applied; risks and controls documented (e.g., FMEA)", "ISO 9001 §6.1"], ["Internal audit program established and self-audits performed", "ISO 9001 §9.2"], ["Process performance metrics trended and acted upon", "ISO 9001 §9.1"], ["CAPA effectiveness verified and recurrence checked before closure", "ISO 9001 §10.2"], ["Nonconforming output identified, segregated, and dispositioned by authority", "ISO 9001 §8.7"]]]];
+
+/* Facility process walk — follows material physically through the plant, in flow order.
+   Observation-focused (what you see on the floor), distinct from the system checklist above.
+   The "Quality Hold Points" station maps where QA enters the process. */
+const WALKTHROUGH = [["Walk · Receiving & Inbound", [["Inbound materials received into a defined, controlled area; deliveries inspected on arrival (damage, seals, temperature)", "211.82"], ["Received lots logged and placed in quarantine pending disposition; quarantine status physically visible", "211.82"], ["Sampling done in a controlled manner that prevents contamination (booth / dedicated area, cleaned tools)", "211.84"], ["Rejected or damaged material identified and segregated from usable stock", "211.89"]]], ["Walk · Material Storage", [["Released, quarantined, and rejected materials segregated; status unambiguous throughout the warehouse", "211.42"], ["Storage conditions (temp / RH) monitored and within limits; records current at the location", "211.46"], ["Stock off floor and wall, organized for FIFO / FEFO; retest / expiry dates visible", "211.150"], ["Cold-chain, controlled, and flammable materials stored under required conditions", "211.46"]]], ["Walk · Preweigh & Dispensing", [["Dispensing performed in a controlled area with dust / cross-contamination control (booth, local exhaust)", "211.46"], ["Component identity verified against the batch record before weighing; independent second-check in place", "211.101"], ["Scales / balances calibrated with current status; daily verification checks performed", "211.68"], ["Line clearance before dispensing a new batch; only one product / lot staged at a time", "211.130"], ["Dispensed components labeled with material, lot, weight, and batch; reconciliation captured", "211.125"]]], ["Walk · Manufacturing / Compounding", [["Correct, current batch record present at the line and being completed contemporaneously", "211.188"], ["In-process parameters (temp, mix time / speed, pH, viscosity) checked and recorded at defined points", "211.110"], ["Equipment shows clean / status ID and use log; correct equipment for the batch", "211.67"], ["Add-order and process steps followed as written; deviations captured in real time", "211.100"], ["Area layout and flow prevent mix-ups between concurrent batches or products", "211.42"]]], ["Walk · Filling & Packaging", [["Line clearance verified and documented before start; no prior product, components, or labels remain", "211.130"], ["Label and component reconciliation controlled; issued vs used vs returned accounted for", "211.125"], ["Lot / expiry coding verified at start and periodically; codes legible and correct on the unit", "211.130"], ["In-line checks (fill weight, torque, seal integrity) performed and recorded", "211.110"]]], ["Walk · Laboratory", [["Samples logged, tracked, and stored under proper conditions from submission through testing", "211.194"], ["In-process and finished testing run against approved methods and current specifications", "211.160"], ["OOS / atypical results investigated before disposition; no testing into compliance", "211.192"], ["Reserve / retention samples kept per requirement; stability pulls on schedule", "211.170"], ["Instruments calibrated and reference standards controlled and in-date", "211.194"]]], ["Walk · Quality Hold Points", [["Incoming release gate: QA dispositions each lot before use — no quarantined material in production", "211.84"], ["In-process QA presence: defined checkpoints where QA verifies before the batch proceeds", "211.110"], ["Line clearance and batch-record review are enforced gates, not paperwork after the fact", "211.130"], ["Finished-product release: QA reviews the complete record and authorizes before shipment", "211.192"], ["Deviations, OOS, and change controls route to QA, which has authority to stop or hold", "211.192"]]], ["Walk · Cleaning & Sanitation", [["Cleaning performed between products / batches per procedure; clean status labeled with date and expiry", "211.67"], ["Cleaning records contemporaneous; changeover cleaning documented and reviewed", "211.67"], ["Cleaning effectiveness verified (visual plus swab / rinse where validated); cleaning validation on file", "211.67"], ["Facility sanitation (drains, floors, air handling surfaces) documented and current", "211.56"], ["Cleaning agents controlled, identified, and stored away from product and components", "211.56"]]], ["Walk · Utilities & Environment", [["Water system (PW / USP) monitored; chemical and micro results within limits", "211.48"], ["HVAC / air handling suits the operation; pressure differentials maintained where required", "211.46"], ["Compressed air or gases contacting product are filtered and monitored", "211.48"], ["No signs of pests through the flow; pest control devices in place and serviced", "211.56"]]], ["Walk · Validation & Qualification", [["Equipment qualified (IQ / OQ / PQ) for use; qualification status traceable", "211.63"], ["Process validation supports the process as run; revalidation triggers defined", "211.100"], ["Cleaning validation covers the product / equipment matrix with worst-case rationale", "211.67"], ["Computerized systems validated; data integrity controls active (audit trail, access)", "21 CFR 11"], ["Calibration and preventive maintenance programs current across the line", "211.68"]]]];
+const WALKTHROUGH_LOGI = [["Walk · Receiving & Inbound", [["Inbound trailers / containers inspected on arrival (seal, damage, cleanliness, pest evidence)", "211.82"], ["Temperature verified at receipt for controlled product; excursions flagged before put-away", "211.142"], ["Counts and condition checked against documentation; discrepancies recorded", ""], ["Suspect or damaged product quarantined rather than put to sellable stock", "211.142"]]], ["Walk · Storage & Warehouse", [["Released, hold, and damaged stock segregated; status clear at the location", "211.142"], ["Temp / RH monitored across zones with alarms; records current", "211.142"], ["FIFO / FEFO enforced; short-dated stock picked first; expiry visible", ""], ["Racking, locations, and pallets intact; product off the floor and organized", ""]]], ["Walk · Quality Holds & Returns", [["Quarantine area defined, access-controlled, and clearly labeled", ""], ["Returns quarantined, assessed, and dispositioned by quality before any restock", "SOP-QA-RET-001"], ["Destruction documented with authorization and certificates", ""], ["FDA / CBP hold shipments recognized, secured, and handled per procedure", "SOP-QA-FDAHOLD-001"]]], ["Walk · Pick / Pack & Staging", [["Pick accuracy verified (scan or check); mispick rate tracked", "211.150"], ["Lot and expiry captured through pick and pack in the WMS", ""], ["Staged outbound orders segregated; no mixed-lot or mixed-order pallets", ""], ["Packing protects product; cold-chain packouts prepared per procedure", ""]]], ["Walk · Shipping & Outbound", [["Carriers qualified; cold-chain carriers meet temperature requirements", ""], ["Temperature confirmed at load for controlled shipments; data captured", "211.150"], ["Load inspected; BOL / lot detail recorded; trailer sealed", ""], ["Outbound documentation supports lot-level traceability for recall", ""]]], ["Walk · Facility, Cleaning & Systems", [["Warehouse clean and orderly; dock areas and spill / damage handling controlled", "211.56"], ["Pest control devices in place and serviced; no signs of activity", "211.56"], ["WMS provides lot / expiry traceability inbound through outbound", ""], ["SOPs current and controlled; staff trained with records for the work performed", ""]]]];
 const TEMPLATES = {
   otc: {
     label: "TPM Quality — OTC & Cosmetic",
@@ -907,6 +913,356 @@ const GUIDANCE = {
     ev: "SOP list with revision status and training records for sampled staff.",
     ok: "SOPs are current and controlled, and staff are trained with current records.",
     gap: "Outdated SOPs in use, or no training records for people performing the work."
+  },
+  "Inbound materials received into a defined, controlled area; deliveries inspected on arrival (damage, seals, temperature)": {
+    ev: "Stand at the dock; watch a receipt or review recent receiving records and the inspection checklist.",
+    ok: "A dedicated receiving area exists and each delivery is inspected and documented before put-away.",
+    gap: "Materials dropped anywhere, no arrival inspection, or damaged/warm loads accepted without note."
+  },
+  "Received lots logged and placed in quarantine pending disposition; quarantine status physically visible": {
+    ev: "Look for the quarantine area and status labels/tags; trace a just-received lot in the system.",
+    ok: "New receipts are logged and held in visible quarantine until QA dispositions them.",
+    gap: "Received stock goes straight to usable racks, or quarantine status isn't visible on the floor."
+  },
+  "Sampling done in a controlled manner that prevents contamination (booth / dedicated area, cleaned tools)": {
+    ev: "Watch a sampling event or inspect the sampling area, tools, and cleaning records.",
+    ok: "Sampling happens in a controlled space with clean, dedicated tools and gowning as needed.",
+    gap: "Sampling in the open aisle, shared/uncleaned scoops, or no contamination controls."
+  },
+  "Rejected or damaged material identified and segregated from usable stock": {
+    ev: "Find the reject/damage area; check labeling and how it's kept apart.",
+    ok: "Rejected material is labeled and physically separated so it can't be picked by mistake.",
+    gap: "Reject stock mixed with good, unlabeled, or awaiting decision in the main racks."
+  },
+  "Released, quarantined, and rejected materials segregated; status unambiguous throughout the warehouse": {
+    ev: "Walk the racks; can you tell each pallet's status at a glance? Spot-check a few against the system.",
+    ok: "Status is obvious everywhere — by location, label, or system — with no ambiguous stock.",
+    gap: "Mixed statuses in one location, faded/missing tags, or system and floor disagree."
+  },
+  "Storage conditions (temp / RH) monitored and within limits; records current at the location": {
+    ev: "Check loggers/charts at the location and the current reading vs limits; how excursions are handled.",
+    ok: "Conditions are monitored, in range, and recorded, with excursions investigated for product impact.",
+    gap: "No monitoring, gaps in the record, or excursions noted with no follow-up."
+  },
+  "Stock off floor and wall, organized for FIFO / FEFO; retest / expiry dates visible": {
+    ev: "Look at pick faces and pallet dates; check whether oldest/shortest-dated is pulled first.",
+    ok: "Stock is orderly, off floor/wall, and rotated by first-expiry with dates visible.",
+    gap: "Long-dated pulled ahead of short-dated, dates hidden, or pallets on the floor."
+  },
+  "Cold-chain, controlled, and flammable materials stored under required conditions": {
+    ev: "Inspect the cold room, controlled-substance cage, and flammable storage against requirements.",
+    ok: "Special-handling materials are stored under the right conditions with access control where needed.",
+    gap: "Cold-chain at ambient, unlocked controlled storage, or flammables near ignition/product."
+  },
+  "Dispensing performed in a controlled area with dust / cross-contamination control (booth, local exhaust)": {
+    ev: "Watch a dispense or inspect the booth, airflow, and cleaning between materials.",
+    ok: "Weighing happens in a controlled space with dust capture and cleaning between materials.",
+    gap: "Open weighing in a shared room, no exhaust, or no cleaning between different components."
+  },
+  "Component identity verified against the batch record before weighing; independent second-check in place": {
+    ev: "Watch identity verification at dispense; look for a documented independent check.",
+    ok: "Each component is confirmed against the batch record and a second person/scan verifies.",
+    gap: "Weighing from memory or label only, or no independent verification of identity/amount."
+  },
+  "Scales / balances calibrated with current status; daily verification checks performed": {
+    ev: "Read the calibration sticker and daily check log on the balances in use.",
+    ok: "Balances show current calibration and a daily verification is recorded before use.",
+    gap: "Overdue calibration, no status shown, or no daily check with known weights."
+  },
+  "Line clearance before dispensing a new batch; only one product / lot staged at a time": {
+    ev: "Observe a changeover in the dispensing area; check the clearance record.",
+    ok: "The area is cleared and documented before a new batch and only one lot is staged.",
+    gap: "Multiple lots staged together, no clearance step, or leftover components from the prior batch."
+  },
+  "Dispensed components labeled with material, lot, weight, and batch; reconciliation captured": {
+    ev: "Inspect staged dispensed containers and the reconciliation on the batch record.",
+    ok: "Each dispensed container is fully labeled and quantities reconcile against the record.",
+    gap: "Unlabeled or partially labeled containers, or no reconciliation of dispensed amounts."
+  },
+  "Correct, current batch record present at the line and being completed contemporaneously": {
+    ev: "Look at the record in use — is it the approved revision, and filled as steps happen?",
+    ok: "The current approved batch record is at the line and entries are made in real time.",
+    gap: "Wrong/old revision, blank sections filled later, or record kept in an office away from the work."
+  },
+  "In-process parameters (temp, mix time / speed, pH, viscosity) checked and recorded at defined points": {
+    ev: "Watch an in-process check; compare recorded values to the record's limits.",
+    ok: "Critical parameters are checked at defined points against limits and recorded as taken.",
+    gap: "Checks skipped, limits missing, values back-filled, or out-of-limit results not actioned."
+  },
+  "Equipment shows clean / status ID and use log; correct equipment for the batch": {
+    ev: "Read the status tag and use log on the vessel/equipment in use.",
+    ok: "Equipment shows clean/in-use status, has a current use log, and matches the batch record.",
+    gap: "No status tag, stale use log, or equipment not specified/qualified for the product."
+  },
+  "Add-order and process steps followed as written; deviations captured in real time": {
+    ev: "Compare what the operator is doing to the written steps; ask how deviations are handled.",
+    ok: "Steps and add-order follow the record and any deviation is documented as it happens.",
+    gap: "Steps out of order, undocumented process changes, or deviations recorded after the fact."
+  },
+  "Area layout and flow prevent mix-ups between concurrent batches or products": {
+    ev: "Look at how concurrent jobs share space, labeling, and material staging.",
+    ok: "Physical separation, labeling, and flow keep concurrent batches from mixing.",
+    gap: "Two products intermixed on one line/bench, shared unlabeled containers, or crossing flows."
+  },
+  "Line clearance verified and documented before start; no prior product, components, or labels remain": {
+    ev: "Observe a packaging changeover or review the clearance record and check for stray labels.",
+    ok: "A documented clearance confirms no prior product, components, or labels remain before start.",
+    gap: "No clearance, prior-run labels/components found, or clearance signed without a real check."
+  },
+  "Label and component reconciliation controlled; issued vs used vs returned accounted for": {
+    ev: "Review label issuance and reconciliation for a run; check printed-label storage.",
+    ok: "Labels are issued in controlled counts and reconcile (used + returned + destroyed = issued).",
+    gap: "No reconciliation, large unexplained variance, or loose labels accessible on the line."
+  },
+  "Lot / expiry coding verified at start and periodically; codes legible and correct on the unit": {
+    ev: "Pull a few units off the line and read the code; check the coding verification record.",
+    ok: "Coding is verified at start and during the run; codes are legible and correct.",
+    gap: "No coding check, wrong/illegible codes, or no start-up challenge of the coder."
+  },
+  "In-line checks (fill weight, torque, seal integrity) performed and recorded": {
+    ev: "Watch in-line checks and compare to recorded values and frequency.",
+    ok: "Fill, torque, and seal checks are done at set frequency and recorded against limits.",
+    gap: "Checks not performed, no limits, or failing results with no line action."
+  },
+  "Samples logged, tracked, and stored under proper conditions from submission through testing": {
+    ev: "Follow a sample from submission log to storage; check chain-of-custody and conditions.",
+    ok: "Samples are logged, traceable, and stored correctly from receipt to test.",
+    gap: "Untracked samples, no submission log, or samples stored improperly before testing."
+  },
+  "In-process and finished testing run against approved methods and current specifications": {
+    ev: "Compare a test being run to the approved method and current spec version.",
+    ok: "Testing follows approved methods against the current specification revision.",
+    gap: "Outdated methods/specs, undocumented method changes, or testing without a spec."
+  },
+  "OOS / atypical results investigated before disposition; no testing into compliance": {
+    ev: "Pull a recent OOS/atypical result and review the investigation before any retest.",
+    ok: "OOS triggers a structured investigation before retest; conclusions are justified.",
+    gap: "Retest until it passes, invalidation without lab root cause, or disposition before investigation."
+  },
+  "Reserve / retention samples kept per requirement; stability pulls on schedule": {
+    ev: "Inspect the reserve/retention store and the stability pull schedule and log.",
+    ok: "Reserves are retained per requirement and stability pulls are on schedule and trended.",
+    gap: "Missing reserves, unlabeled retention, or overdue stability pulls."
+  },
+  "Instruments calibrated and reference standards controlled and in-date": {
+    ev: "Read calibration status on lab instruments and check the reference-standard log.",
+    ok: "Instruments are calibrated on schedule and standards are qualified and in-date.",
+    gap: "Overdue instrument calibration, or expired/unqualified reference standards in use."
+  },
+  "Incoming release gate: QA dispositions each lot before use — no quarantined material in production": {
+    ev: "Ask how a component gets from quarantine to usable; look for QA disposition records.",
+    ok: "QA releases each lot before it can be used and quarantined material never reaches production.",
+    gap: "Production pulls from quarantine, or release is assumed rather than documented by QA."
+  },
+  "In-process QA presence: defined checkpoints where QA verifies before the batch proceeds": {
+    ev: "Ask where QA signs off mid-process; check the record for QA verification points.",
+    ok: "Defined in-process hold points require QA verification before the batch continues.",
+    gap: "No QA touch until the end, or checkpoints exist on paper but aren't enforced."
+  },
+  "Line clearance and batch-record review are enforced gates, not paperwork after the fact": {
+    ev: "Check whether clearance and record review happen at the moment — signatures, timing, independence.",
+    ok: "Clearance and review are real gates done at the right time by someone independent.",
+    gap: "Signatures gathered later, self-review, or product moving before the gate clears."
+  },
+  "Finished-product release: QA reviews the complete record and authorizes before shipment": {
+    ev: "Trace a released lot: full record review and QA release before it shipped.",
+    ok: "QA reviews the complete batch record and authorizes release before finished goods ship.",
+    gap: "Shipment before release, incomplete record at release, or production releasing product."
+  },
+  "Deviations, OOS, and change controls route to QA, which has authority to stop or hold": {
+    ev: "Ask what happens when something goes wrong; confirm QA's stop/hold authority in practice.",
+    ok: "Deviations, OOS, and changes route to QA, and QA can and does stop or hold product.",
+    gap: "QA notified after the fact, or production overrides holds under schedule pressure."
+  },
+  "Cleaning performed between products / batches per procedure; clean status labeled with date and expiry": {
+    ev: "Read clean-status tags on equipment; check cleaning records for the last changeover.",
+    ok: "Equipment is cleaned per procedure between products with a dated, time-bound clean tag.",
+    gap: "No clean status, expired clean hold used, or cleaning not done between different products."
+  },
+  "Cleaning records contemporaneous; changeover cleaning documented and reviewed": {
+    ev: "Pull recent cleaning records; check they were completed at the time and reviewed.",
+    ok: "Cleaning is recorded as performed and changeover cleaning is documented and reviewed.",
+    gap: "Records back-filled, missing changeover cleaning, or no review of cleaning records."
+  },
+  "Cleaning effectiveness verified (visual plus swab / rinse where validated); cleaning validation on file": {
+    ev: "Ask how clean is proven — visual, swab/rinse results — and review the cleaning validation.",
+    ok: "Effectiveness is verified appropriately and cleaning validation supports the method.",
+    gap: "Visual-only where residues matter, no validation, or worst-case not covered."
+  },
+  "Facility sanitation (drains, floors, air handling surfaces) documented and current": {
+    ev: "Walk for drains, floors, and overhead surfaces; check the master sanitation schedule.",
+    ok: "The facility is sanitized on a schedule with records and no obvious build-up.",
+    gap: "Standing water, soiled drains/floors, or sanitation not scheduled or documented."
+  },
+  "Cleaning agents controlled, identified, and stored away from product and components": {
+    ev: "Look at where cleaning chemicals are kept and how they're labeled.",
+    ok: "Cleaning agents are labeled, controlled, and stored apart from product and components.",
+    gap: "Unlabeled chemicals, stored over/near product, or uncontrolled use."
+  },
+  "Water system (PW / USP) monitored; chemical and micro results within limits": {
+    ev: "Review the water system sampling plan and recent chemical/micro results vs limits.",
+    ok: "The water system is monitored on a plan and results are within limits and trended.",
+    gap: "Missed sampling, out-of-limit results without action, or no trending of water quality."
+  },
+  "HVAC / air handling suits the operation; pressure differentials maintained where required": {
+    ev: "Check pressure gauges/differentials and how HVAC is monitored where it matters.",
+    ok: "Air handling fits the operation and required pressure differentials are maintained and recorded.",
+    gap: "No differential where needed, gauges out of range, or HVAC not monitored."
+  },
+  "Compressed air or gases contacting product are filtered and monitored": {
+    ev: "Identify product-contact air/gas points and check filtration and monitoring.",
+    ok: "Product-contact air/gases are filtered and monitored to a defined quality.",
+    gap: "Unfiltered product-contact air, or no monitoring of gas quality."
+  },
+  "No signs of pests through the flow; pest control devices in place and serviced": {
+    ev: "Watch for devices, activity, and gaps as you walk; check service reports and trend.",
+    ok: "Devices are placed and serviced, with no evidence of pests along the flow.",
+    gap: "Evidence of pests, missed services, gaps in coverage, or no trending."
+  },
+  "Equipment qualified (IQ / OQ / PQ) for use; qualification status traceable": {
+    ev: "Pick a piece of equipment and trace its qualification records and status.",
+    ok: "Critical equipment has completed IQ/OQ/PQ and status is traceable.",
+    gap: "Equipment in use without qualification, incomplete protocols, or no requalification after changes."
+  },
+  "Process validation supports the process as run; revalidation triggers defined": {
+    ev: "Compare the validated process to how it actually runs; check revalidation triggers.",
+    ok: "Validation reflects the process as run and revalidation triggers are defined and followed.",
+    gap: "Process drifted from validation, or no criteria for when to revalidate."
+  },
+  "Cleaning validation covers the product / equipment matrix with worst-case rationale": {
+    ev: "Review the cleaning validation and its worst-case product/equipment rationale.",
+    ok: "Cleaning validation covers the matrix with a documented worst-case rationale.",
+    gap: "Gaps in the matrix, no worst-case justification, or validation not maintained."
+  },
+  "Computerized systems validated; data integrity controls active (audit trail, access)": {
+    ev: "On a key system, check validation status, audit trail, and access controls.",
+    ok: "Systems are validated with audit trails on and role-based access enforced.",
+    gap: "Unvalidated systems, audit trail off/editable, or shared logins."
+  },
+  "Calibration and preventive maintenance programs current across the line": {
+    ev: "Sample calibration and PM records across the equipment you walked.",
+    ok: "Calibration and PM are on schedule and current across the line.",
+    gap: "Overdue calibration/PM, or reactive-only maintenance with no program."
+  },
+  "Inbound trailers / containers inspected on arrival (seal, damage, cleanliness, pest evidence)": {
+    ev: "Watch a receipt or review inbound inspection records for seal, damage, cleanliness, pests.",
+    ok: "Every inbound is inspected and documented before unloading to stock.",
+    gap: "No trailer inspection, broken seals accepted, or dirty/pest-evident trailers unloaded without note."
+  },
+  "Temperature verified at receipt for controlled product; excursions flagged before put-away": {
+    ev: "Check receipt temperature records for controlled loads and how excursions are handled.",
+    ok: "Controlled product temperature is verified at receipt and excursions are held for review.",
+    gap: "No receipt temperature check, or warm product put away before assessment."
+  },
+  "Counts and condition checked against documentation; discrepancies recorded": {
+    ev: "Review a recent receipt: counts and condition against the paperwork.",
+    ok: "Inbound counts and condition are reconciled to documents and discrepancies recorded.",
+    gap: "No count verification, or discrepancies accepted without a record."
+  },
+  "Suspect or damaged product quarantined rather than put to sellable stock": {
+    ev: "Find where suspect/damaged inbound goes; check labeling and separation.",
+    ok: "Suspect or damaged product is quarantined and kept out of sellable stock.",
+    gap: "Damaged product restocked as sellable, or no quarantine for suspect inbound."
+  },
+  "Released, hold, and damaged stock segregated; status clear at the location": {
+    ev: "Walk the racks; can you tell released vs hold vs damaged at each location?",
+    ok: "Stock status is clear by location, label, or system with no ambiguity.",
+    gap: "Statuses mixed in one area, missing tags, or system and floor disagree."
+  },
+  "Temp / RH monitored across zones with alarms; records current": {
+    ev: "Check zone monitoring, alarm setup, and current records vs limits.",
+    ok: "Zones are monitored with alarms and current records; excursions are actioned.",
+    gap: "Unmonitored zones, disabled alarms, or gaps in the record."
+  },
+  "FIFO / FEFO enforced; short-dated stock picked first; expiry visible": {
+    ev: "Check WMS pick logic and physically compare pick faces to expiry.",
+    ok: "Short-dated stock is picked first, verified by system and floor, with expiry visible.",
+    gap: "Long-dated shipped ahead of short-dated, or no rotation control."
+  },
+  "Racking, locations, and pallets intact; product off the floor and organized": {
+    ev: "Look for damaged racking, blocked locations, and floor-stacked or unstable pallets.",
+    ok: "Racking and pallets are sound and product is organized and off the floor.",
+    gap: "Damaged racking, product on the floor, or disorganized/unsafe stacking."
+  },
+  "Quarantine area defined, access-controlled, and clearly labeled": {
+    ev: "Locate the quarantine area; check access control and labeling.",
+    ok: "Quarantine is a defined, access-controlled, clearly labeled area.",
+    gap: "Quarantine undefined, unlocked, or unlabeled — anyone can move held stock."
+  },
+  "Returns quarantined, assessed, and dispositioned by quality before any restock": {
+    ev: "Review the returns process and records: quarantine, assessment, disposition.",
+    ok: "Returns are held, assessed, and dispositioned by quality before any restock.",
+    gap: "Returns restocked without assessment, or no quality involvement in disposition."
+  },
+  "Destruction documented with authorization and certificates": {
+    ev: "Pull destruction records and certificates for recent disposals.",
+    ok: "Destruction is authorized and documented with certificates retained.",
+    gap: "Disposal without authorization or documentation, or missing certificates."
+  },
+  "FDA / CBP hold shipments recognized, secured, and handled per procedure": {
+    ev: "Review the hold procedure and any held shipments; how they're secured and communicated.",
+    ok: "Holds are recognized, product secured, and handled per procedure with quality notified.",
+    gap: "No hold procedure, held product not secured, or released without authorization."
+  },
+  "Pick accuracy verified (scan or check); mispick rate tracked": {
+    ev: "Observe picking and the verification step; review the mispick/error rate.",
+    ok: "Picks are verified (scan or check) and the error rate is low and trended.",
+    gap: "No verification step, high mispick rate, or errors not tracked."
+  },
+  "Lot and expiry captured through pick and pack in the WMS": {
+    ev: "Confirm the WMS captures lot and expiry from pick through pack for a sample order.",
+    ok: "Lot and expiry are captured through pick and pack and are reportable.",
+    gap: "Lot/expiry not captured, or the system can't report what shipped where."
+  },
+  "Staged outbound orders segregated; no mixed-lot or mixed-order pallets": {
+    ev: "Look at the staging lanes; check for mixed orders or mixed lots on pallets.",
+    ok: "Staged orders are segregated with no mixed-order or ambiguous pallets.",
+    gap: "Orders intermixed in staging, or mixed-lot pallets without clear identity."
+  },
+  "Packing protects product; cold-chain packouts prepared per procedure": {
+    ev: "Inspect packing materials and a cold-chain packout against the procedure.",
+    ok: "Packing protects product and cold-chain packouts follow the validated procedure.",
+    gap: "Inadequate packing, improvised cold-chain, or packout not per procedure."
+  },
+  "Carriers qualified; cold-chain carriers meet temperature requirements": {
+    ev: "Review carrier qualification records and cold-chain carrier temperature capability.",
+    ok: "Carriers are qualified and cold-chain carriers meet temperature requirements.",
+    gap: "Unqualified carriers, or cold-chain shipped on carriers without temperature capability."
+  },
+  "Temperature confirmed at load for controlled shipments; data captured": {
+    ev: "Check load-out temperature records and any in-transit data for controlled shipments.",
+    ok: "Temperature is confirmed at load and data is captured for controlled shipments.",
+    gap: "No load temperature check, or no shipping temperature data."
+  },
+  "Load inspected; BOL / lot detail recorded; trailer sealed": {
+    ev: "Watch a load-out or review records: inspection, BOL/lot detail, seal application.",
+    ok: "Loads are inspected, BOL and lot detail recorded, and trailers sealed.",
+    gap: "No load inspection, missing lot detail on the BOL, or unsealed trailers."
+  },
+  "Outbound documentation supports lot-level traceability for recall": {
+    ev: "Trace a shipped lot to customers from outbound records.",
+    ok: "Outbound records enable lot-level traceability to support a recall.",
+    gap: "No lot-level shipping records, or inability to trace product downstream."
+  },
+  "Warehouse clean and orderly; dock areas and spill / damage handling controlled": {
+    ev: "Walk the floor and docks for cleanliness, spills, and damage handling.",
+    ok: "The warehouse and docks are clean and orderly with spill/damage handling controlled.",
+    gap: "Debris, uncontrolled spills, or damaged product handling that risks contamination."
+  },
+  "Pest control devices in place and serviced; no signs of activity": {
+    ev: "Look for devices and activity along the walk; check service reports and trend.",
+    ok: "Devices are placed and serviced with no evidence of pest activity.",
+    gap: "Evidence of pests, missed services, or no trending of activity."
+  },
+  "WMS provides lot / expiry traceability inbound through outbound": {
+    ev: "Trace a lot end to end in the WMS, receipt through shipment.",
+    ok: "The WMS captures lot and expiry and can trace a lot inbound through outbound.",
+    gap: "Lot/expiry not captured, or the system can't reconstruct where a lot went."
+  },
+  "SOPs current and controlled; staff trained with records for the work performed": {
+    ev: "Sample SOP revision status and training records for staff doing the work.",
+    ok: "SOPs are current and controlled and staff are trained with current records.",
+    gap: "Outdated SOPs in use, or no training records for the people performing the work."
   }
 };
 
@@ -1011,9 +1367,14 @@ const blankProfile = () => ({
   contact: "",
   notes: ""
 });
+function sectionsFor(key) {
+  const t = TEMPLATES[key];
+  const walk = key === "logi" ? WALKTHROUGH_LOGI : WALKTHROUGH;
+  return [...COMMON_SECTIONS, ...walk, ...t.sections];
+}
 function buildAudit(facility, location, key, auditor, date) {
   const t = TEMPLATES[key];
-  const all = [...COMMON_SECTIONS, ...t.sections];
+  const all = sectionsFor(key);
   return {
     id: uid(),
     facility,
@@ -2822,7 +3183,7 @@ function NewAudit({
     }
   }, Object.entries(TEMPLATES).map(([key, t]) => {
     const sel = type === key;
-    const n = COMMON_SECTIONS.reduce((s, [, i]) => s + i.length, 0) + t.sections.reduce((s, [, i]) => s + i.length, 0);
+    const n = sectionsFor(key).reduce((s, [, i]) => s + i.length, 0);
     return /*#__PURE__*/React.createElement("button", {
       key: key,
       onClick: () => setType(key),
