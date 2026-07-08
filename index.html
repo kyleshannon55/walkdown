@@ -13,9 +13,23 @@
 <title>Walkdown — Facility Audit</title>
 <style>
   html,body{margin:0;padding:0;background:#EDEFF2;-webkit-text-size-adjust:100%}
+  html[data-theme="dark"],html[data-theme="dark"] body{background:#0E1116}
+  html[data-theme="dark"] .boot{color:#98A2B3}
   #root{min-height:100vh}
   .boot{font-family:-apple-system,system-ui,sans-serif;color:#586070;padding:24px;font-size:14px}
 </style>
+<script>
+  /* Apply saved (or system) theme before render to avoid a flash of the wrong theme. */
+  (function () {
+    try {
+      var t = localStorage.getItem("wd:theme");
+      if (t !== "dark" && t !== "light") {
+        t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
 <script async src="https://unpkg.com/docx@8.5.0/build/index.umd.js" crossorigin></script>
 </head>
 <body>
@@ -352,6 +366,16 @@ const Plus = p => /*#__PURE__*/React.createElement(Ico, p, /*#__PURE__*/React.cr
 }), /*#__PURE__*/React.createElement("path", {
   d: "M12 5v14"
 }));
+const Sun = p => /*#__PURE__*/React.createElement(Ico, p, /*#__PURE__*/React.createElement("circle", {
+  cx: "12",
+  cy: "12",
+  r: "4"
+}), /*#__PURE__*/React.createElement("path", {
+  d: "M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+}));
+const Moon = p => /*#__PURE__*/React.createElement(Ico, p, /*#__PURE__*/React.createElement("path", {
+  d: "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+}));
 const ChevronLeft = p => /*#__PURE__*/React.createElement(Ico, p, /*#__PURE__*/React.createElement("path", {
   d: "m15 18-6-6 6-6"
 }));
@@ -498,7 +522,16 @@ const CSS = `
 :root{
   --bg:#EDEFF2; --surface:#FFFFFF; --ink:#13161B; --ink-soft:#586070;
   --line:#DCE0E6; --navy:#1B2A41; --accent:#0FA0A0; --accent-ink:#0A6E6E;
+  --tint:#EAF6F6;
+  color-scheme:light;
 }
+html[data-theme="dark"]{
+  --bg:#0E1116; --surface:#171C24; --ink:#E7EAF1; --ink-soft:#98A2B3;
+  --line:#2A313C; --navy:#0C1522; --accent:#19B6B6; --accent-ink:#37D0D0;
+  --tint:#123038;
+  color-scheme:dark;
+}
+html[data-theme="dark"] .card{box-shadow:none}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 .wd{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
 .wd-h{font-family:'Space Grotesk',system-ui,sans-serif}
@@ -1908,8 +1941,8 @@ function Guidance({
     style: {
       marginTop: 8,
       padding: "10px 12px",
-      background: "#F4FAFA",
-      border: "1px solid #D7E8E8",
+      background: "var(--tint)",
+      border: "1px solid var(--line)",
       borderRadius: 10,
       fontSize: 12,
       lineHeight: 1.5
@@ -2072,7 +2105,7 @@ function AuditNav({
       padding: "11px 12px",
       borderRadius: 10,
       marginBottom: 6,
-      background: active ? "#EAF6F6" : "transparent",
+      background: active ? "var(--tint)" : "transparent",
       border: "1px solid " + (active ? "#BEE3E3" : "transparent")
     }
   }, /*#__PURE__*/React.createElement("span", {
@@ -2222,7 +2255,7 @@ function AuditNav({
         padding: "10px 12px",
         borderRadius: 10,
         marginBottom: 6,
-        background: active ? "#EAF6F6" : "transparent",
+        background: active ? "var(--tint)" : "transparent",
         border: "1px solid " + (active ? "#BEE3E3" : "transparent")
       }
     }, /*#__PURE__*/React.createElement("div", {
@@ -2284,6 +2317,23 @@ function App() {
   const importRef = useRef(null);
   const wide = useWide(1000);
   const [backingUp, setBackingUp] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    try {
+      return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+    } catch {
+      return "light";
+    }
+  });
+  const toggleTheme = () => setTheme(prev => {
+    const next = prev === "dark" ? "light" : "dark";
+    try {
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("wd:theme", next);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", next === "dark" ? "#0C1522" : "#1B2A41");
+    } catch {}
+    return next;
+  });
   useEffect(() => {
     (async () => {
       if (hasStore) {
@@ -2727,7 +2777,9 @@ function App() {
     },
     onBackup: exportBackup,
     onRestore: () => importRef.current?.click(),
-    backingUp: backingUp
+    backingUp: backingUp,
+    theme: theme,
+    onToggleTheme: toggleTheme
   }), view === "new" && /*#__PURE__*/React.createElement(NewAudit, {
     onBack: () => setView("home"),
     recent: [...new Set(audits.map(a => a.facility))].slice(0, 6),
@@ -2826,7 +2878,9 @@ function Home({
   onReset,
   onBackup,
   onRestore,
-  backingUp
+  backingUp,
+  theme,
+  onToggleTheme
 }) {
   const open = audits.filter(a => assessedCount(a) < itemsFlat(a).length).length;
   const done = audits.length - open;
@@ -2869,14 +2923,39 @@ function Home({
       fontWeight: 700,
       letterSpacing: -.3
     }
-  }, "Walkdown")), audits.length > 0 && /*#__PURE__*/React.createElement("button", {
+  }, "Walkdown")), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center",
+    style: {
+      gap: 2
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: onToggleTheme,
+    className: "press",
+    "aria-label": theme === "dark" ? "Switch to light mode" : "Switch to dark mode",
+    title: theme === "dark" ? "Switch to light mode" : "Switch to dark mode",
+    style: {
+      color: "#fff",
+      display: "inline-flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: 34,
+      height: 34,
+      borderRadius: 9,
+      background: "rgba(255,255,255,.10)"
+    }
+  }, theme === "dark" ? /*#__PURE__*/React.createElement(Sun, {
+    size: 18
+  }) : /*#__PURE__*/React.createElement(Moon, {
+    size: 18
+  })), audits.length > 0 && /*#__PURE__*/React.createElement("button", {
     onClick: onReset,
     className: "press",
     style: {
       color: "rgba(255,255,255,.55)",
-      fontSize: 12
+      fontSize: 12,
+      paddingLeft: 4
     }
-  }, "Reset")), /*#__PURE__*/React.createElement("div", {
+  }, "Reset"))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       color: "rgba(255,255,255,.7)",
@@ -2954,7 +3033,7 @@ function Home({
         fontSize: 11,
         padding: "3px 8px",
         borderRadius: 6,
-        background: isDone ? "#E7F4EC" : "#EAF6F6",
+        background: isDone ? "#E7F4EC" : "var(--tint)",
         color: isDone ? "#1E7C44" : "var(--accent-ink)",
         fontWeight: 600
       }
@@ -3175,7 +3254,7 @@ function NewAudit({
       padding: "6px 11px",
       borderRadius: 99,
       border: "1px solid " + (facility === f ? "var(--accent)" : "var(--line)"),
-      background: facility === f ? "#EAF6F6" : "var(--surface)",
+      background: facility === f ? "var(--tint)" : "var(--surface)",
       color: facility === f ? "var(--accent-ink)" : "var(--ink)"
     }
   }, f)))), /*#__PURE__*/React.createElement(Label, null, "AUDIT TYPE"), /*#__PURE__*/React.createElement("div", {
@@ -3197,7 +3276,7 @@ function NewAudit({
         marginBottom: 10,
         borderColor: sel ? "var(--accent)" : "var(--line)",
         borderWidth: sel ? 2 : 1,
-        background: sel ? "#F5FBFB" : "var(--surface)"
+        background: sel ? "var(--tint)" : "var(--surface)"
       }
     }, /*#__PURE__*/React.createElement("div", {
       className: "flex items-center justify-between"
