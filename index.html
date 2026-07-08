@@ -7,16 +7,19 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Walkdown">
-<meta name="theme-color" content="#1B2A41">
+<meta name="theme-color" content="#11355A">
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%226%22%20fill%3D%22%231B2A41%22%2F%3E%3Cpath%20d%3D%22M6%2010l3%2012%203-9%203%209%203-12%22%20fill%3D%22none%22%20stroke%3D%22%230FA0A0%22%20stroke-width%3D%222.5%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%226%22%20fill%3D%22%2311355A%22%2F%3E%3Cpath%20d%3D%22M6%2010l3%2012%203-9%203%209%203-12%22%20fill%3D%22none%22%20stroke%3D%22%232E6DA6%22%20stroke-width%3D%222.5%22%20stroke-linejoin%3D%22round%22%20stroke-linecap%3D%22round%22%2F%3E%3C%2Fsvg%3E">
 <title>Walkdown — Facility Audit</title>
 <style>
-  html,body{margin:0;padding:0;background:#EDEFF2;-webkit-text-size-adjust:100%}
-  html[data-theme="dark"],html[data-theme="dark"] body{background:#0E1116}
-  html[data-theme="dark"] .boot{color:#98A2B3}
+  html,body{margin:0;padding:0;background:#F1F5F9;-webkit-text-size-adjust:100%}
+  html[data-theme="dark"],html[data-theme="dark"] body{background:#0B1220}
+  html[data-theme="dark"] .boot{color:#93A3B8}
   #root{min-height:100vh}
-  .boot{font-family:-apple-system,system-ui,sans-serif;color:#586070;padding:24px;font-size:14px}
+  .boot{font-family:-apple-system,system-ui,sans-serif;color:#55617A;padding:24px;font-size:14px}
 </style>
 <script>
   /* Apply saved (or system) theme before render to avoid a flash of the wrong theme. */
@@ -518,23 +521,23 @@ const HelpCircle = p => /*#__PURE__*/React.createElement(Ico, p, /*#__PURE__*/Re
 
 /* ============================== design tokens ============================== */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700;800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 :root{
-  --bg:#EDEFF2; --surface:#FFFFFF; --ink:#13161B; --ink-soft:#586070;
-  --line:#DCE0E6; --navy:#1B2A41; --accent:#0FA0A0; --accent-ink:#0A6E6E;
-  --tint:#EAF6F6;
+  --bg:#F1F5F9; --surface:#FFFFFF; --ink:#11355A; --ink-soft:#55617A;
+  --line:#E2E8F0; --navy:#11355A; --accent:#2E6DA6; --accent-ink:#1C4E7E;
+  --tint:#E7F0F8;
   color-scheme:light;
 }
 html[data-theme="dark"]{
-  --bg:#0E1116; --surface:#171C24; --ink:#E7EAF1; --ink-soft:#98A2B3;
-  --line:#2A313C; --navy:#0C1522; --accent:#19B6B6; --accent-ink:#37D0D0;
-  --tint:#123038;
+  --bg:#0B1220; --surface:#111C2E; --ink:#E7EEF6; --ink-soft:#93A3B8;
+  --line:#24344A; --navy:#0A1E36; --accent:#538DB9; --accent-ink:#7FB6DD;
+  --tint:#152B44;
   color-scheme:dark;
 }
 html[data-theme="dark"] .card{box-shadow:none}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-.wd{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
-.wd-h{font-family:'Space Grotesk',system-ui,sans-serif}
+.wd{font-family:'Instrument Sans',system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
+.wd-h{font-family:'Schibsted Grotesk',system-ui,sans-serif}
 .mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
 .flex{display:flex}.items-center{align-items:center}.justify-between{justify-content:space-between}.grid{display:grid}.grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
 button{font-family:inherit;cursor:pointer;border:none;background:none}
@@ -562,7 +565,7 @@ input:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px soli
 const SEV = {
   critical: {
     label: "Critical",
-    color: "#C81E3A",
+    color: "#C02938",
     fg: "#fff"
   },
   major: {
@@ -586,17 +589,17 @@ const STATUS = {
   OFI: {
     code: "OFI",
     word: "Opportunity",
-    color: "#3457A6"
+    color: "#2E6DA6"
   },
   NC: {
     code: "NC",
     word: "Nonconforming",
-    color: "#C81E3A"
+    color: "#C02938"
   },
   NA: {
     code: "N/A",
     word: "Not applicable",
-    color: "#5B626D"
+    color: "#55617A"
   }
 };
 const STATUS_ORDER = ["C", "OFI", "NC", "NA"];
@@ -1464,8 +1467,8 @@ const BAND_TONE = {
     bg: "#E7F4EC"
   },
   ok: {
-    fg: "#0A6E6E",
-    bg: "#E6F3F3"
+    fg: "#1C4E7E",
+    bg: "#E7F0F8"
   },
   warn: {
     fg: "#8A5A00",
@@ -1476,8 +1479,8 @@ const BAND_TONE = {
     bg: "#FCE9E7"
   },
   muted: {
-    fg: "#5B626D",
-    bg: "#EDEFF2"
+    fg: "#55617A",
+    bg: "#F1F5F9"
   }
 };
 function auditScore(a) {
@@ -2106,7 +2109,7 @@ function AuditNav({
       borderRadius: 10,
       marginBottom: 6,
       background: active ? "var(--tint)" : "transparent",
-      border: "1px solid " + (active ? "#BEE3E3" : "transparent")
+      border: "1px solid " + (active ? "#C7DCF0" : "transparent")
     }
   }, /*#__PURE__*/React.createElement("span", {
     className: "flex items-center",
@@ -2256,7 +2259,7 @@ function AuditNav({
         borderRadius: 10,
         marginBottom: 6,
         background: active ? "var(--tint)" : "transparent",
-        border: "1px solid " + (active ? "#BEE3E3" : "transparent")
+        border: "1px solid " + (active ? "#C7DCF0" : "transparent")
       }
     }, /*#__PURE__*/React.createElement("div", {
       className: "flex items-center justify-between"
@@ -2278,7 +2281,7 @@ function AuditNav({
       className: "mono",
       style: {
         fontSize: 10,
-        color: "#C81E3A",
+        color: "#C02938",
         fontWeight: 600
       }
     }, sNc, "NC"), sOfi > 0 && /*#__PURE__*/React.createElement("span", {
@@ -2330,7 +2333,7 @@ function App() {
       document.documentElement.setAttribute("data-theme", next);
       localStorage.setItem("wd:theme", next);
       const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute("content", next === "dark" ? "#0C1522" : "#1B2A41");
+      if (meta) meta.setAttribute("content", next === "dark" ? "#0A1E36" : "#11355A");
     } catch {}
     return next;
   });
@@ -3606,8 +3609,8 @@ function SopsView({
       width: 20,
       height: 20,
       borderRadius: 5,
-      border: "1.5px solid " + (flag ? "#C81E3A" : "var(--line)"),
-      background: flag ? "#C81E3A" : "transparent",
+      border: "1.5px solid " + (flag ? "#C02938" : "var(--line)"),
+      background: flag ? "#C02938" : "transparent",
       display: "flex",
       alignItems: "center",
       justifyContent: "center"
@@ -3676,7 +3679,7 @@ function SopsView({
     }
   }, "Rev ", s.rev), s.flag && /*#__PURE__*/React.createElement(PunchTag, {
     label: "Concern",
-    color: "#C81E3A",
+    color: "#C02938",
     fg: "#fff"
   })), s.title && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -3951,7 +3954,7 @@ function AuditView({
       className: "mono",
       style: {
         fontSize: 11,
-        color: "#C81E3A",
+        color: "#C02938",
         fontWeight: 600
       }
     }, sNc, " NC"), sOfi > 0 && /*#__PURE__*/React.createElement("span", {
@@ -4323,7 +4326,7 @@ function ItemDetail({
     }
   }, [["open", "Open"], ["closed", "Closed"]].map(([val, lbl]) => {
     const active = item.closure === val;
-    const color = val === "closed" ? "#2C9D5D" : "#C81E3A";
+    const color = val === "closed" ? "#2C9D5D" : "#C02938";
     return /*#__PURE__*/React.createElement("button", {
       key: val,
       onClick: () => setClosure(val),
@@ -4425,9 +4428,9 @@ function ReportView({
       BorderStyle,
       ImageRun
     } = D;
-    const gray = "586070",
-      teal = "0A6E6E",
-      red = "C81E3A";
+    const gray = "55617A",
+      teal = "1C4E7E",
+      red = "C02938";
     const P = (runs, opts = {}) => new Paragraph({
       ...opts,
       children: Array.isArray(runs) ? runs : [runs]
@@ -4705,16 +4708,16 @@ function ReportView({
   function exportDocHtml() {
     const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     let h = `<h1 style="font-family:Arial">Facility Audit Report</h1><h2 style="font-family:Arial">${esc(audit.facility)}</h2>`;
-    h += `<p style="font-family:Consolas,monospace;color:#586070">${esc(audit.typeLabel)} &middot; ${esc(audit.framework)}<br>Location: ${esc(audit.location || "—")}<br>Auditor: ${esc(audit.auditor)} &middot; ${esc(fmtDate(audit.date))}<br>Report ID: ${esc(audit.id.slice(-6).toUpperCase())}</p>`;
+    h += `<p style="font-family:Consolas,monospace;color:#55617A">${esc(audit.typeLabel)} &middot; ${esc(audit.framework)}<br>Location: ${esc(audit.location || "—")}<br>Auditor: ${esc(audit.auditor)} &middot; ${esc(fmtDate(audit.date))}<br>Report ID: ${esc(audit.id.slice(-6).toUpperCase())}</p>`;
     if (prof.length || p.notes && p.notes.trim()) {
       h += `<h3 style="font-family:Arial">Facility</h3><table cellpadding="4" style="font-family:Arial;border-collapse:collapse">`;
       prof.forEach(([l, v]) => {
-        h += `<tr><td style="color:#586070">${esc(l)}</td><td>${esc(v)}</td></tr>`;
+        h += `<tr><td style="color:#55617A">${esc(l)}</td><td>${esc(v)}</td></tr>`;
       });
       h += `</table>`;
       if (p.notes && p.notes.trim()) h += `<p style="font-family:Arial">${esc(p.notes)}</p>`;
     }
-    h += `<h3 style="font-family:Arial">Audit Health</h3><p style="font-family:Arial"><span style="font-size:22pt;font-weight:bold">${sc.pct == null ? "Not scored" : esc(sc.pct) + "/100"}</span> &nbsp; <b style="color:${(BAND_TONE[sc.band.tone] || BAND_TONE.muted).fg}">${esc(sc.band.label)}</b><br><span style="color:#586070">${sc.conform == null ? "&mdash;" : esc(sc.conform) + "%"} conformance &middot; ${esc(sc.scored)} scored${sc.counts.NA ? ` &middot; ${esc(sc.counts.NA)} N/A` : ""}${sc.counts.critical ? ` &middot; ${esc(sc.counts.critical)} critical` : ""}</span></p>`;
+    h += `<h3 style="font-family:Arial">Audit Health</h3><p style="font-family:Arial"><span style="font-size:22pt;font-weight:bold">${sc.pct == null ? "Not scored" : esc(sc.pct) + "/100"}</span> &nbsp; <b style="color:${(BAND_TONE[sc.band.tone] || BAND_TONE.muted).fg}">${esc(sc.band.label)}</b><br><span style="color:#55617A">${sc.conform == null ? "&mdash;" : esc(sc.conform) + "%"} conformance &middot; ${esc(sc.scored)} scored${sc.counts.NA ? ` &middot; ${esc(sc.counts.NA)} N/A` : ""}${sc.counts.critical ? ` &middot; ${esc(sc.counts.critical)} critical` : ""}</span></p>`;
     h += `<h3 style="font-family:Arial">Summary</h3><p style="font-family:Arial">${esc(done)}/${esc(total)} assessed${pending ? ` &middot; ${pending} pending` : ""}<br>`;
     if (fs.length) {
       const parts = counts.map(([kk, n]) => `${SEV[kk].label}: ${n}`);
@@ -4726,8 +4729,8 @@ function ReportView({
       h += `<h3 style="font-family:Arial">Findings</h3>`;
       allFindings.forEach(f => {
         const label = f.status === "NC" ? SEV[f.severity].label.toUpperCase() : "OFI";
-        h += `<p style="font-family:Arial"><b>${esc(label)}</b> &middot; <span style="color:#586070">${esc(f.section)}</span><br><b>${esc(f.requirement)}</b>`;
-        if (f.ref) h += `<br><span style="color:#0A6E6E">${esc(f.ref)}</span>`;
+        h += `<p style="font-family:Arial"><b>${esc(label)}</b> &middot; <span style="color:#55617A">${esc(f.section)}</span><br><b>${esc(f.requirement)}</b>`;
+        if (f.ref) h += `<br><span style="color:#1C4E7E">${esc(f.ref)}</span>`;
         if (f.evidence) h += `<br><b>Evidence:</b> ${esc(f.evidence)}`;
         if (f.note) h += `<br>${esc(f.note)}`;
         h += `</p>`;
@@ -4736,14 +4739,14 @@ function ReportView({
           if (data) h += `<p><img src="${data}" style="max-width:260px"/></p>`;
         });
         const closed = f.closure === "closed";
-        h += `<p style="font-family:Arial;color:#586070">Status: ${closed ? "Closed" : "Open"}${closed && f.closedDate ? ` (${esc(fmtDate(f.closedDate))})` : ""}${f.closureNote ? " — " + esc(f.closureNote) : ""}</p>`;
+        h += `<p style="font-family:Arial;color:#55617A">Status: ${closed ? "Closed" : "Open"}${closed && f.closedDate ? ` (${esc(fmtDate(f.closedDate))})` : ""}${f.closureNote ? " — " + esc(f.closureNote) : ""}</p>`;
       });
     }
     h += `<h3 style="font-family:Arial">Documents examined</h3>`;
-    if (!audit.sops.length) h += `<p style="font-family:Arial;color:#586070">None recorded.</p>`;else audit.sops.forEach(s => {
-      h += `<p style="font-family:Arial"><b>${esc(s.number)}</b>${s.rev ? `  Rev ${esc(s.rev)}` : ""}${s.flag ? `  <span style="color:#C81E3A"><b>[Concern]</b></span>` : ""}${s.title ? `<br>${esc(s.title)}` : ""}${s.note ? `<br><span style="color:#586070">${esc(s.note)}</span>` : ""}</p>`;
+    if (!audit.sops.length) h += `<p style="font-family:Arial;color:#55617A">None recorded.</p>`;else audit.sops.forEach(s => {
+      h += `<p style="font-family:Arial"><b>${esc(s.number)}</b>${s.rev ? `  Rev ${esc(s.rev)}` : ""}${s.flag ? `  <span style="color:#C02938"><b>[Concern]</b></span>` : ""}${s.title ? `<br>${esc(s.title)}` : ""}${s.note ? `<br><span style="color:#55617A">${esc(s.note)}</span>` : ""}</p>`;
     });
-    if (pending > 0) h += `<p style="font-family:Arial;color:#586070"><i>${pending} requirement${pending > 1 ? "s" : ""} not yet assessed.</i></p>`;
+    if (pending > 0) h += `<p style="font-family:Arial;color:#55617A"><i>${pending} requirement${pending > 1 ? "s" : ""} not yet assessed.</i></p>`;
     const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'></head><body>${h}</body></html>`;
     saveBlob(new Blob(["\ufeff" + html], {
       type: "application/msword"
@@ -5085,7 +5088,7 @@ function ReportView({
       borderRadius: 6,
       fontWeight: 600,
       background: f.closure === "closed" ? "#E7F4EC" : "#FBEEF0",
-      color: f.closure === "closed" ? "#1E7C44" : "#C81E3A"
+      color: f.closure === "closed" ? "#1E7C44" : "#C02938"
     }
   }, f.closure === "closed" ? "CLOSED" : "OPEN", f.closure === "closed" && f.closedDate ? ` · ${fmtDate(f.closedDate)}` : ""), f.closureNote && /*#__PURE__*/React.createElement("span", {
     style: {
@@ -5138,7 +5141,7 @@ function ReportView({
     }
   }, "Rev ", s.rev), s.flag && /*#__PURE__*/React.createElement(PunchTag, {
     label: "Concern",
-    color: "#C81E3A",
+    color: "#C02938",
     fg: "#fff"
   })), s.title && /*#__PURE__*/React.createElement("div", {
     style: {
