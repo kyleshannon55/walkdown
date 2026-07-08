@@ -1,5 +1,5 @@
-const CACHE = 'walkdown-v1';
-const CORE = ['./', './index.html', './manifest.webmanifest'];
+const CACHE = 'walkdown-v2';
+const CORE = ['./', './index.html', './manifest.webmanifest', './apple-touch-icon.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(CORE); }).then(function () { return self.skipWaiting(); }));

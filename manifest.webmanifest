@@ -4,6 +4,10 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#EDEFF2",
-  "theme_color": "#1B2A41"
+  "background_color": "#F1F5F9",
+  "theme_color": "#11355A",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
 }
